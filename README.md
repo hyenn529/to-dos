@@ -13,23 +13,36 @@ npm run build
 npm start                 # http://localhost:4000
 ```
 
+배포는 **Vercel + Turso** (둘 다 무료 티어). 자세한 순서는 아래 [배포](#배포) 참고.
+
 ---
 
-## 세 갈래
+## 네 갈래
+
+`누구 것인가(나/상대) × 어떤 일인가(개인/업무)` 두 축이 만나 넷이 된다.
 
 | 갈래 | 색 | 누가 쓰나 |
 |------|-----|-----------|
-| **나** | 라일락 `#A281EE` | 내 개인 일정 — 나만 체크 |
-| **상대** | 스카이 `#3E9DE8` | 상대 개인 일정 — 상대가 직접 적고 체크. 나는 **보기만** |
-| **업무** | 버밀리언 `#F5503C` | **내 업무. 상대 화면에는 아예 내려가지 않는다** |
+| **내 개인** | 연보라 `#B49BF5` | 나만 적고 체크 |
+| **내 업무** | 진보라 `#7C3AED` | 나만 적고 체크 |
+| **상대 개인** | 하늘 `#7FC8F5` | 상대가 적고 체크. 나는 **보기만** |
+| **상대 업무** | 진파랑 `#1D6FD4` | 상대가 적고 체크. 나는 **보기만** |
 
-갈래는 사람 이름이 아니라 **보는 사람 기준의 자리**로 정의된다.
+**계열이 사람, 단계가 종류다.** 혜인은 보라 계열, 민우는 파랑 계열이고,
+그 안에서 개인은 연하게 업무는 진하게 간다. 색이 잘 보이도록 갈래 머리글에 바탕을 깔고
+할 일 카드마다 왼쪽에 색 띠를 넣었다.
+
+모양이 거든다 — **둥글면 개인, 각지면 업무.** 체크박스·카드 모서리·달력 막대가 같은 규칙이라
+색이 안 보여도 구분된다.
+
+갈래는 사람 이름이 아니라 **보는 사람 기준의 자리**로 계산된다.
 혜인이 열면 왼쪽이 혜인, 민우가 열면 왼쪽이 민우다. 달력 막대 순서도 같이 뒤집힌다.
 
 ```
-내 갈래   = lane 'personal' + owner === 나
-상대 갈래 = lane 'personal' + owner === 상대
-업무      = lane 'work'     + owner === 나
+lane 'personal' + owner === 나   → mine
+lane 'work'     + owner === 나   → mineWork
+lane 'personal' + owner === 상대 → partner
+lane 'work'     + owner === 상대 → partnerWork
 ```
 
 ### 공유 규칙 셋
@@ -54,14 +67,13 @@ npm start                 # http://localhost:4000
 
 ## 달력 칸 읽는 법
 
-칸 안에 글자는 날짜 숫자뿐이다. 그날의 양은 얇은 막대 세 줄로만 보여준다.
+칸 안에 글자는 날짜 숫자뿐이다. 그날의 양은 얇은 막대 네 줄로만 보여준다.
 
 | 표시 | 뜻 |
 |------|-----|
 | 막대 길이 8 / 14 / 20px | 1–2개 / 3–4개 / 5개 이상 |
-| 첫째 줄 · 둘째 줄 · 셋째 줄 | 나 · 상대 · 업무 (순서 고정) |
-| **빨강이 길면** | 일에 잡아먹힌 날 |
-| **빨강이 없으면** | 둘 다 여유 있는 날 |
+| 위에서 아래로 | 내 개인 · 내 업무 · 상대 개인 · 상대 업무 (순서 고정) |
+| **진한 막대가 길면** | 일에 잡아먹힌 날 |
 | 회색 막대 | 다 끝냈거나 지나간 날 |
 
 ---
@@ -69,13 +81,18 @@ npm start                 # http://localhost:4000
 ## 구조
 
 ```
-server/          Express 5 + node:sqlite (Node 22 내장) — API 와 정적 파일을 한 프로세스에서
-  src/db.ts        스키마 + 마이그레이션 (user_version 기반)
+api/index.ts     Vercel 서버리스 진입점 (정적 파일은 Vercel 이 직접 서빙)
+vercel.json      라우팅 · 캐시 헤더
+
+server/          Express 5 — 로컬에서는 API 와 웹을 한 프로세스에서
+  src/db.ts        백엔드 두 개를 같은 비동기 인터페이스 뒤에 둔 어댑터 + 마이그레이션
+                   · 로컬·테스트 → Node 내장 node:sqlite (설치할 것도 인터넷도 불필요)
+                   · 배포        → Turso (@libsql/client)
   src/auth.ts      scrypt 해시, HMAC 서명 httpOnly 쿠키 세션
   src/todos.ts     조회·쓰기 + 갈래 계산과 권한 판정
-  src/events.ts    SSE 허브 — 한쪽이 바꾸면 다른 쪽 화면이 스스로 갱신
+  src/events.ts    변경 번호 — 쓰기마다 +1, 화면은 이 숫자만 보고 다시 부른다
   src/routes/      auth · space · todos
-  test/            node:test 통합 테스트 15개
+  test/            node:test 통합 테스트 20개 (가짜 libSQL 서버로 Turso 경로까지 검증)
 
 web/             React 19 + Vite 8 + TypeScript
   src/lib/         api · store(Context) · 날짜 계산
@@ -83,10 +100,11 @@ web/             React 19 + Vite 8 + TypeScript
   src/styles/      디자인 토큰 + 화면 스타일 (라이트/다크)
   public/          manifest · 아이콘 · 서비스워커
 
-docs/design/     설계 문서와 화면 시안 (v0.1 → v0.6)
+docs/design/     설계 문서와 화면 설계서 (v0.1 → v2.0)
 ```
 
-**네이티브 의존성이 없다.** SQLite 는 Node 22 내장 `node:sqlite` 를 쓰고,
+**네이티브 의존성이 없다.** 로컬 SQLite 는 Node 22 내장 `node:sqlite`,
+Turso 클라이언트는 순수 JS(`@libsql/client/web`)를 쓴다.
 서버 TypeScript 는 Node 의 타입 스트리핑으로 빌드 없이 그대로 돈다.
 
 ## 명령어
@@ -106,7 +124,9 @@ docs/design/     설계 문서와 화면 시안 (v0.1 → v0.6)
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
 | `HARU_SECRET` | (개발 시 임시 생성) | 세션 쿠키 서명 키. `NODE_ENV=production` 이면 **필수** |
-| `HARU_DB_PATH` | `./data/haru.db` | SQLite 파일. 컨테이너면 볼륨 경로로 |
+| `TURSO_DATABASE_URL` | — | 있으면 Turso 에, 없으면 로컬 파일에 저장 |
+| `TURSO_AUTH_TOKEN` | — | Turso 접근 토큰 |
+| `HARU_DB_PATH` | `./data/haru.db` | 로컬 SQLite 파일 경로 |
 | `PORT` / `HOST` | `4000` / `0.0.0.0` | |
 | `NODE_ENV` | — | `production` 이면 쿠키가 `secure` 로 나간다 (HTTPS 필요) |
 
@@ -130,17 +150,44 @@ docs/design/     설계 문서와 화면 시안 (v0.1 → v0.6)
 
 ## 실시간 반영
 
-상대가 무언가 바꾸면 SSE(`/api/events`)로 신호가 오고 화면이 스스로 다시 불러온다.
-신호에는 **변경 내용이 실리지 않는다** — 각자 자기 권한으로 다시 조회하므로
-남에게 보이면 안 되는 업무 항목이 새어 나갈 길이 없다.
-탭으로 돌아왔을 때도 한 번 맞춘다.
+공간마다 **변경 번호**가 있고 쓰기가 일어날 때마다 1씩 올라간다.
+화면은 8초마다 `GET /api/todos/version` 으로 **숫자 하나만** 물어보고,
+바뀌었을 때만 실제 목록을 다시 부른다.
+
+- 화면을 보고 있지 않으면 **아예 묻지 않는다** (다른 앱 보는 동안 요청 0)
+- 응답이 `{"version":37}` 한 줄이라 자주 물어도 부담이 없다
+- 변경 내용을 실어 보내지 않으므로, 각자 자기 권한으로 다시 조회한다
+
+> 서버리스에서는 프로세스가 요청 사이에 살아 있지 않아 연결을 열어두는 방식(SSE)을
+> 쓸 수 없다. 폴링은 그 제약에 맞춘 선택이고, 둘이 쓰는 앱에서는 체감 차이가 거의 없다.
+
+## 배포
+
+**Vercel(코드가 도는 곳) + Turso(데이터가 사는 곳)** 조합. 둘 다 무료 티어로 충분하다.
+
+1. **Turso 데이터베이스 만들기**
+   ```
+   turso db create haru
+   turso db show haru --url          # libsql://... → TURSO_DATABASE_URL
+   turso db tokens create haru       # → TURSO_AUTH_TOKEN
+   ```
+2. **Vercel 에 저장소 연결** — 빌드 설정은 `vercel.json` 에 이미 들어 있다
+3. **환경변수 세 개** 등록: `HARU_SECRET`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
+4. 배포. 첫 요청에 마이그레이션이 자동으로 돈다
+
+`TURSO_DATABASE_URL` 이 없으면 로컬 파일(`data/haru.db`)을 쓴다.
+환경변수 하나가 "어디에 저장되는가"를 가른다.
+
+> 데이터는 Turso 서버에 있지만 **SQLite 파일 그대로**라, 언제든 통째로 내려받아
+> 백업하거나 자기 서버로 옮길 수 있다.
 
 ## 설계 문서
 
 | 문서 | 내용 |
 |------|------|
 | [`docs/design/design-spec.md`](docs/design/design-spec.md) | 설계 원칙 · 공유 규칙 · 화면별 사양 · 디자인 토큰 |
-| [`docs/design/screens.html`](docs/design/screens.html) | 실제 크기 화면 시안 |
+| [`docs/design/screens.html`](docs/design/screens.html) | 화면 설계서 — 색 체계와 **실제 앱 스크린샷** |
 
 설계 이력: v0.1 캘린더 앱 구조 → v0.2 시간 격자 제거 → v0.3 시간 개념 완전 삭제 →
-v0.4 하늘색·연보라 팔레트 → v0.5 세 갈래 → v0.6 업무 빨강 + 공유 구조 → **v1.0 구현**
+v0.4 하늘색·연보라 팔레트 → v0.5 세 갈래 → v0.6 업무 빨강 + 공유 구조 →
+v1.0 구현 → **v2.0 네 갈래 + Vercel·Turso 배포**

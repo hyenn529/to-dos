@@ -2,12 +2,13 @@
  * 디자인 토큰.
  *
  * 갈래가 네 개인데 색을 넷 다 따로 고르면 무지개가 되고 무엇이 무엇인지 외워야 한다.
- * 그래서 **두 축**으로 나눴다.
+ * 그래서 **한 색상 계열 안에서 두 단계**로 나눈다.
  *
- *   색상(hue)   = 사람      혜인 계열은 보라, 민우 계열은 파랑
- *   진하기      = 개인/업무  연하면 개인, 진하면 업무
+ *   계열   = 사람      혜인은 보라 계열, 민우는 파랑 계열
+ *   단계   = 개인/업무  개인은 연하고 부드럽게, 업무는 진하고 선명하게
  *
- * 덕분에 "보라색이네 → 혜인" "진하네 → 업무" 두 번만 보면 읽힌다.
+ * 두 단계 사이를 충분히 벌려서 나란히 놓지 않아도 구분되게 했다 —
+ * 명도와 채도를 동시에 움직이므로 작은 막대에서도 갈린다.
  * 업무가 진한 건 우연이 아니라, 일이 낀 날이 달력에서 무겁게 보이라는 뜻이다.
  *
  * 각 색은 다시 두 벌이다.
@@ -31,22 +32,22 @@
   --line-soft: #e5edf8;
 
   /* 보라 계열 — 나 */
-  --mine: #b79bf7;
-  --mine-ink: #6b3fc4;
-  --mine-soft: #eee7fe;
+  --mine: #b49bf5;
+  --mine-ink: #7b5ad6;
+  --mine-soft: #efe9fe;
 
-  --mineWork: #6d28d9;
+  --mineWork: #7c3aed;
   --mineWork-ink: #5b21b6;
-  --mineWork-soft: #e5dbfb;
+  --mineWork-soft: #e7dcfd;
 
   /* 파랑 계열 — 상대 */
-  --partner: #6ec1f5;
-  --partner-ink: #14639f;
-  --partner-soft: #ddeffc;
+  --partner: #7fc8f5;
+  --partner-ink: #17699f;
+  --partner-soft: #e0f1fd;
 
-  --partnerWork: #0b63a8;
-  --partnerWork-ink: #0a4e85;
-  --partnerWork-soft: #d5e6f4;
+  --partnerWork: #1d6fd4;
+  --partnerWork-ink: #114e96;
+  --partnerWork-soft: #dce9fa;
 
   /* 시스템 오류 전용. 갈래 색과 겹치지 않게 따로 둔다 — 할 일에는 쓰이지 않는다. */
   --alert-ink: #b03a54;
@@ -85,17 +86,17 @@
     --mine-ink: #d5c4fc;
     --mine-soft: #241c3d;
 
-    --mineWork: #8b5cf6;
-    --mineWork-ink: #b79bf7;
-    --mineWork-soft: #221a3a;
+    --mineWork: #9f6bff;
+    --mineWork-ink: #be9bff;
+    --mineWork-soft: #241a3f;
 
     --partner: #a8d8fa;
     --partner-ink: #bee3fb;
     --partner-soft: #12283f;
 
-    --partnerWork: #3b9be8;
-    --partnerWork-ink: #79bef2;
-    --partnerWork-soft: #10263c;
+    --partnerWork: #4d9bf0;
+    --partnerWork-ink: #7fbff5;
+    --partnerWork-soft: #102a45;
 
     --alert-ink: #f2a3b4;
     --alert-soft: #38202a;
@@ -120,17 +121,17 @@
   --mine-ink: #d5c4fc;
   --mine-soft: #241c3d;
 
-  --mineWork: #8b5cf6;
-  --mineWork-ink: #b79bf7;
-  --mineWork-soft: #221a3a;
+  --mineWork: #9f6bff;
+  --mineWork-ink: #be9bff;
+  --mineWork-soft: #241a3f;
 
   --partner: #a8d8fa;
   --partner-ink: #bee3fb;
   --partner-soft: #12283f;
 
-  --partnerWork: #3b9be8;
-  --partnerWork-ink: #79bef2;
-  --partnerWork-soft: #10263c;
+  --partnerWork: #4d9bf0;
+  --partnerWork-ink: #7fbff5;
+  --partnerWork-soft: #102a45;
 
   --alert-ink: #f2a3b4;
   --alert-soft: #38202a;
@@ -150,21 +151,21 @@
   --line: #d4e0f1;
   --line-soft: #e5edf8;
 
-  --mine: #b79bf7;
-  --mine-ink: #6b3fc4;
-  --mine-soft: #eee7fe;
+  --mine: #b49bf5;
+  --mine-ink: #7b5ad6;
+  --mine-soft: #efe9fe;
 
-  --mineWork: #6d28d9;
+  --mineWork: #7c3aed;
   --mineWork-ink: #5b21b6;
-  --mineWork-soft: #e5dbfb;
+  --mineWork-soft: #e7dcfd;
 
-  --partner: #6ec1f5;
-  --partner-ink: #14639f;
-  --partner-soft: #ddeffc;
+  --partner: #7fc8f5;
+  --partner-ink: #17699f;
+  --partner-soft: #e0f1fd;
 
-  --partnerWork: #0b63a8;
-  --partnerWork-ink: #0a4e85;
-  --partnerWork-soft: #d5e6f4;
+  --partnerWork: #1d6fd4;
+  --partnerWork-ink: #114e96;
+  --partnerWork-soft: #dce9fa;
 
   --alert-ink: #b03a54;
   --alert-soft: #fde8ed;

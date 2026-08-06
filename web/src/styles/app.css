@@ -491,19 +491,30 @@ ul {
   border-bottom: 1.5px solid var(--line-soft);
 }
 /*
- * 개인/업무는 색만으로 나누지 않는다.
+ * 개인/업무는 **색이 먼저, 모양이 보조**다.
  *
- * 사람 축이 이미 색상(보라/파랑)을 쓰고 있어서, 같은 사람 안의 개인·업무를 또 색으로만
- * 가르면 "연한 보라"와 "진한 보라"를 매번 비교해야 한다. 그래서 **형태**를 하나 더 쓴다.
+ *   색   : 같은 계열 안에서 연함↔진함 간격을 크게 벌리고,
+ *          머리글 바탕과 카드 색 띠로 면적을 넓혔다 — 이게 주된 신호다.
+ *   모양 : 둥글면 개인, 각지면 업무.
  *
- *   둥글다 = 개인 (사적인 것)
- *   각지다 = 업무 (공적인 것)
- *
- * 색이 안 보여도, 흑백으로 인쇄해도 구분된다.
+ * 처음에 모양만 썼을 때는 눈에 잘 안 들어왔다. 색이 넓게 깔린 지금은
+ * 모양이 색을 거들어 주므로, 스치듯 봐도 개인인지 업무인지 갈린다.
+ * 덤으로 흑백으로 인쇄해도 구분된다.
  */
+.lane__head {
+  background: var(--bucket-soft);
+  border-radius: var(--r-sm);
+  padding: 6px 9px;
+  border-bottom: 0;
+}
+/* 업무는 바탕을 더 진하게, 모서리를 세워서 */
+[data-bucket$='Work'] .lane__head {
+  background: color-mix(in srgb, var(--bucket) 20%, var(--surface));
+  border-radius: 3px;
+}
 .lane__mark {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--bucket);
   flex: 0 0 auto;
@@ -513,7 +524,7 @@ ul {
 }
 .lane__name {
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 700;
   color: var(--bucket-ink);
 }
 .lane__count {
@@ -559,16 +570,24 @@ ul {
 
 /* ==================================================== 할 일 한 줄 */
 
+/*
+ * 카드마다 왼쪽에 색 띠를 둔다.
+ *
+ * 색을 머리글에만 두면 목록을 훑는 동안에는 색이 안 보인다. 띠를 넣으면
+ * 네 갈래가 각자 다른 색으로 깔려서, 어느 칸을 보고 있는지 계속 알 수 있다.
+ */
 .row {
   border-radius: var(--r-md);
   background: var(--surface-2);
-  padding: 9px 10px;
+  padding: 9px 10px 9px 12px;
+  box-shadow: inset 3px 0 0 var(--bucket);
 }
 .row.is-done {
   background: transparent;
+  box-shadow: inset 3px 0 0 var(--faint);
 }
 .row--compact {
-  padding: 6px 7px;
+  padding: 6px 7px 6px 9px;
   background: var(--surface);
   font-size: 11.5px;
 }
@@ -631,10 +650,9 @@ ul {
   width: 17px;
   height: 17px;
   margin-top: 1px;
-  /* 개인은 둥글게, 업무는 각지게 — 아래 [data-bucket$='Work'] 참고 */
   border-radius: 6px;
   flex: 0 0 auto;
-  box-shadow: inset 0 0 0 1.5px var(--bucket);
+  box-shadow: inset 0 0 0 2px var(--bucket);
   transition: background 0.12s ease;
 }
 .check:hover {
@@ -660,16 +678,19 @@ ul {
   border-radius: 5px;
 }
 
-/* 업무 갈래는 모서리를 세운다 */
-[data-bucket$='Work'] .check {
-  border-radius: 2px;
-}
+/* 업무 갈래는 모서리를 세운다 — 둥글면 개인, 각지면 업무 */
+[data-bucket$='Work'] .check,
 [data-bucket$='Work'] .check--sm {
   border-radius: 2px;
 }
 [data-bucket$='Work'] .dot::after {
   border-radius: 1px;
 }
+[data-bucket$='Work'] .row {
+  border-radius: 4px;
+}
+
+
 .check--sm.is-checked::after {
   font-size: 9px;
 }
