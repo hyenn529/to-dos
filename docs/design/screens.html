@@ -1,10 +1,10 @@
-<title>하루 — 캘린더가 늘 곁에 있는 to-do</title>
+<title>하루 — 둘이 같이 쓰는 to-do</title>
 
 <style>
   *, *::before, *::after { box-sizing: border-box; }
 
   :root {
-    /* 밝은 값은 막대·체크·아이콘 같은 '표시'용, -ink 는 글자용 */
+    /* 밝은 값은 막대·체크 같은 '표시'용, -ink 는 글자용 */
     --paper:      #E2EDFA;
     --surface:    #FFFFFF;
     --surface-2:  #EFF5FD;
@@ -23,9 +23,9 @@
     --minwoo-ink: #16639F;
     --minwoo-soft:#DCEDFC;
 
-    --work:       #F2A93E;   /* 마리골드 */
-    --work-ink:   #8F6100;
-    --work-soft:  #FDEED2;
+    --work:       #F5503C;   /* 버밀리언 */
+    --work-ink:   #C0301F;
+    --work-soft:  #FFE0DA;
 
     --soft-shadow: 0 1px 1px rgba(30,42,74,.04), 0 12px 32px -18px rgba(30,42,74,.24);
 
@@ -40,7 +40,7 @@
       --line:#2A3550; --line-soft:#212B42;
       --hyein:#B79BF7;  --hyein-ink:#C9B4FB;  --hyein-soft:#241C3D;
       --minwoo:#5FB5F5; --minwoo-ink:#8CCBFA; --minwoo-soft:#12283F;
-      --work:#F5BC64;   --work-ink:#F8D08C;   --work-soft:#33260F;
+      --work:#FF7A66;   --work-ink:#FF9E8D;   --work-soft:#3B1D18;
       --soft-shadow: 0 1px 1px rgba(0,0,0,.4), 0 12px 32px -20px rgba(0,0,0,.8);
     }
   }
@@ -50,7 +50,7 @@
     --line:#2A3550; --line-soft:#212B42;
     --hyein:#B79BF7;  --hyein-ink:#C9B4FB;  --hyein-soft:#241C3D;
     --minwoo:#5FB5F5; --minwoo-ink:#8CCBFA; --minwoo-soft:#12283F;
-    --work:#F5BC64;   --work-ink:#F8D08C;   --work-soft:#33260F;
+    --work:#FF7A66;   --work-ink:#FF9E8D;   --work-soft:#3B1D18;
     --soft-shadow: 0 1px 1px rgba(0,0,0,.4), 0 12px 32px -20px rgba(0,0,0,.8);
   }
   :root[data-theme="light"] {
@@ -59,7 +59,7 @@
     --line:#D4E0F1; --line-soft:#E5EDF8;
     --hyein:#A281EE;  --hyein-ink:#6B3FC4;  --hyein-soft:#EDE4FE;
     --minwoo:#3E9DE8; --minwoo-ink:#16639F; --minwoo-soft:#DCEDFC;
-    --work:#F2A93E;   --work-ink:#8F6100;   --work-soft:#FDEED2;
+    --work:#F5503C;   --work-ink:#C0301F;   --work-soft:#FFE0DA;
     --soft-shadow: 0 1px 1px rgba(30,42,74,.04), 0 12px 32px -18px rgba(30,42,74,.24);
   }
 
@@ -118,8 +118,16 @@
           border-left:2px solid var(--line); padding-left:14px; max-width:72ch; }
   .note b { color:var(--ink-2); font-weight:600; }
 
+  /* ---- 아바타 ---- */
+  .av { width:16px; height:16px; border-radius:50%; display:grid; place-items:center;
+        font-size:8.5px; font-weight:700; color:#fff; flex:0 0 auto; line-height:1; }
+  .av.h { background:var(--hyein); }
+  .av.m { background:var(--minwoo); }
+  .av.stack { margin-left:-6px; box-shadow:0 0 0 1.5px var(--surface); }
+  .avpair { display:flex; align-items:center; }
+
   /* ================= 앱 셸 ================= */
-  .app { display:grid; grid-template-columns:320px 1fr; min-height:620px; font-size:13px; }
+  .app { display:grid; grid-template-columns:320px 1fr; min-height:640px; font-size:13px; }
 
   .calpane { background:linear-gradient(168deg,
                var(--minwoo-soft) 0%, var(--hyein-soft) 46%, var(--surface-2) 100%);
@@ -129,7 +137,7 @@
   .brand .mk { width:18px; height:18px; border-radius:6px; background:var(--minwoo); position:relative; }
   .brand .mk::after { content:""; position:absolute; left:6px; top:6px; width:12px; height:12px;
                border-radius:4px; background:var(--hyein); }
-  .brand .who { margin-left:auto; font-size:11px; color:var(--muted); font-weight:400; }
+  .brand .avpair { margin-left:auto; }
 
   .cal-top { display:flex; align-items:center; gap:10px; }
   .cal-top .mo { font-size:22px; font-weight:650; letter-spacing:-.03em; }
@@ -151,7 +159,7 @@
   .day.pick { box-shadow:inset 0 0 0 1.5px var(--ink); }
   .day.rest .n { color:var(--hyein-ink); }
 
-  /* 세 갈래 밀도 막대 — 위에서부터 혜인 · 민우 · 업무 (순서 고정) */
+  /* 밀도 막대 — 위에서부터 혜인 · 민우 · 업무 (순서 고정) */
   .load { display:flex; flex-direction:column; gap:3px; align-items:center; width:100%; }
   .load i { height:3px; border-radius:99px; display:block; }
   .load i.h { background:var(--hyein); }
@@ -167,12 +175,12 @@
   .legend { background:var(--surface); border-radius:10px; padding:11px 13px;
             font-size:11.5px; color:var(--muted); line-height:1.75; }
   .legend .row { display:flex; align-items:center; gap:8px; }
-  .legend .row i { height:3px; border-radius:99px; width:14px; }
+  .legend .row i { height:3px; border-radius:99px; width:14px; flex:0 0 auto; }
 
   .glance { display:flex; flex-direction:column; gap:6px; }
   .g-row { display:flex; align-items:center; gap:9px; background:var(--surface);
            border-radius:9px; padding:8px 12px; }
-  .g-row .sw { width:8px; height:8px; border-radius:3px; }
+  .g-row .sw { width:8px; height:8px; border-radius:3px; flex:0 0 auto; }
   .g-row .lb { font-size:12px; }
   .g-row .vl { margin-left:auto; font-size:12px; color:var(--muted); }
   .g-row .vl b { color:var(--ink); font-weight:650; }
@@ -201,11 +209,12 @@
   /* 세 칸 */
   .lanes { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; flex:1; }
   .lane { display:flex; flex-direction:column; gap:8px; }
-  .lane-h { display:flex; align-items:center; gap:8px; padding-bottom:9px;
+  .lane-h { display:flex; align-items:center; gap:7px; padding-bottom:9px;
             border-bottom:1.5px solid var(--line-soft); }
   .lane-h .dotmk { width:9px; height:9px; border-radius:3px; flex:0 0 auto; }
   .lane-h .nm { font-size:14.5px; font-weight:650; letter-spacing:-.02em; }
-  .lane-h .tag2 { font-size:10.5px; color:var(--muted); font-weight:400; }
+  .lane-h .tag2 { font-size:10px; color:var(--muted); font-weight:400;
+                  background:var(--surface-2); border-radius:99px; padding:2px 7px; }
   .lane-h .ct { margin-left:auto; font-size:11.5px; color:var(--muted); white-space:nowrap; }
   .lane-h.h .nm { color:var(--hyein-ink); }  .lane-h.h .dotmk { background:var(--hyein); }
   .lane-h.m .nm { color:var(--minwoo-ink); } .lane-h.m .dotmk { background:var(--minwoo); }
@@ -222,6 +231,11 @@
   .box.done { background:var(--faint); box-shadow:none; position:relative; }
   .box.done::after { content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
                      color:var(--surface); font-size:10px; }
+  /* 상대 것 — 체크할 수 없으니 체크박스가 아니라 점 */
+  .box.ro { box-shadow:none; display:grid; place-items:center; }
+  .box.ro::after { content:""; width:7px; height:7px; border-radius:50%; background:var(--minwoo); }
+  .box.ro.h::after { background:var(--hyein); }
+
   .item .tx { flex:1; font-size:12.5px; line-height:1.5; min-width:0; }
   .item .sub { font-size:11px; color:var(--muted); display:block; margin-top:2px; }
   .item.is-done .tx { color:var(--faint); text-decoration:line-through; }
@@ -229,8 +243,10 @@
   .moved { font-size:10px; color:var(--muted); background:var(--surface);
            border-radius:99px; padding:2px 7px; box-shadow:inset 0 0 0 1px var(--line-soft);
            white-space:nowrap; }
-  .shared { font-size:10px; color:var(--minwoo-ink); background:var(--minwoo-soft);
-            border-radius:99px; padding:2px 7px; white-space:nowrap; }
+  .together { display:flex; align-items:center; gap:4px; font-size:10px; color:var(--ink-2);
+              background:var(--surface); border-radius:99px; padding:2px 7px 2px 4px;
+              box-shadow:inset 0 0 0 1px var(--line); white-space:nowrap; }
+  .together .av { width:13px; height:13px; font-size:7px; }
 
   .subs { margin:6px 0 0 0; display:flex; flex-direction:column; gap:5px; }
   .subs > span { display:flex; gap:8px; align-items:center; font-size:11.5px; color:var(--muted); }
@@ -240,6 +256,7 @@
   .adder { display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:9px;
            border:1px dashed var(--line); color:var(--faint); font-size:12px; }
   .fold { font-size:11.5px; color:var(--faint); padding:4px 2px; }
+  .ro-note { font-size:10.5px; color:var(--faint); padding:2px 2px 0; line-height:1.5; }
 
   /* ================= 주간 ================= */
   .weekwrap { display:flex; flex-direction:column; gap:14px; flex:1; }
@@ -261,6 +278,9 @@
   .mini-item .mbox.m { box-shadow:inset 0 0 0 1.3px var(--minwoo); }
   .mini-item .mbox.w { box-shadow:inset 0 0 0 1.3px var(--work); }
   .mini-item .mbox.done { background:var(--faint); box-shadow:none; }
+  .mini-item .mbox.ro { box-shadow:none; display:grid; place-items:center; }
+  .mini-item .mbox.ro::after { content:""; width:5px; height:5px; border-radius:50%;
+                               background:var(--minwoo); }
   .mini-item.is-done { opacity:.5; }
   .mini-item.is-done span { text-decoration:line-through; }
   .wcol .wadd { margin-top:auto; text-align:center; font-size:15px; color:var(--faint);
@@ -273,7 +293,7 @@
   /* ================= 모바일 ================= */
   .phones { display:flex; gap:30px; flex-wrap:wrap; }
   .phone { width:296px; flex:0 0 auto; }
-  .glass { background:var(--surface); border-radius:30px; overflow:hidden; height:625px;
+  .glass { background:var(--surface); border-radius:30px; overflow:hidden; height:640px;
            display:flex; flex-direction:column; position:relative;
            box-shadow:var(--soft-shadow); border:1px solid var(--line-soft); }
   .status { display:flex; justify-content:space-between; padding:12px 20px 2px;
@@ -289,7 +309,7 @@
   .m-cal .cal .day { height:46px; padding-top:5px; gap:3.5px; }
   .m-cal .cal .day .n { font-size:12px; }
 
-  .m-body { flex:1; padding:13px 15px 0; display:flex; flex-direction:column; gap:10px;
+  .m-body { flex:1; padding:13px 15px 0; display:flex; flex-direction:column; gap:9px;
             overflow:hidden; }
   .m-dhead { display:flex; align-items:baseline; gap:8px; }
   .m-dhead .dt { font-size:17px; font-weight:650; letter-spacing:-.02em; }
@@ -318,8 +338,12 @@
   .chipset { display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; }
   .chipset span { font-size:11.5px; border-radius:99px; padding:5px 12px; color:var(--ink-2);
                   background:var(--surface-2); }
-  .chipset span.on-m { background:var(--minwoo-ink); color:#fff; font-weight:600; }
+  .chipset span.on-w { background:var(--work-ink); color:#fff; font-weight:600; }
+  .chipset span.on-t { background:var(--ink); color:#fff; font-weight:600; }
   .hintline { margin-top:12px; font-size:11px; color:var(--faint); line-height:1.6; }
+
+  .feedrow { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted);
+             background:var(--surface-2); border-radius:9px; padding:7px 10px; }
 
   /* ---- 토큰 ---- */
   .swrow { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
@@ -356,76 +380,76 @@
 <div class="wrap">
 
   <header class="hero">
-    <p class="eyebrow">화면 설계 / v0.5 / 세 갈래</p>
-    <h1>할 일만 보면 됩니다.<br>달력은 그냥 옆에 있어요.</h1>
+    <p class="eyebrow">화면 설계 / v0.6 / 둘이 같이</p>
+    <h1>둘이 같이 보는 달력,<br>각자 챙기는 할 일.</h1>
     <p class="lede">
       시간표가 없습니다. 몇 시에 무엇을 하라고 요구하지 않고,
       오늘 <b>혜인 · 민우 · 업무</b> 각각 무엇이 남았는지만 보여줍니다.
-      월간 달력은 어느 화면에서도 사라지지 않지만, 일정을 적는 곳이 아니라
-      <b>지금 어디쯤 와 있는지 보는 지도</b>로만 씁니다.
+      혜인과 민우가 <b>같은 공간을 함께 쓰되</b>, 체크는 각자 자기 것만 합니다.
+      월간 달력은 어느 화면에서도 사라지지 않습니다.
     </p>
   </header>
 
   <!-- 세 갈래 -->
   <section class="band">
     <div class="band-head">
-      <p class="eyebrow">v0.5에서 달라진 것</p>
-      <h2>두 갈래에서 세 갈래로</h2>
-      <p>내 일정과 업무만으로는 부족했습니다. 민우의 일정을 따로 두면
-        "그날 민우가 되는지"를 내 할 일 옆에서 바로 볼 수 있습니다.</p>
+      <p class="eyebrow">갈래</p>
+      <h2>세 갈래, 그리고 색 하나가 튄다</h2>
+      <p>사람 둘은 이웃한 시원한 색으로 묶고, 업무만 정반대편 빨강으로 뺐습니다.
+        일이 끼어든 날은 달력에서 바로 눈에 띕니다.</p>
     </div>
     <div class="cols c3">
       <div class="card" style="box-shadow:inset 4px 0 0 var(--hyein), var(--soft-shadow)">
-        <span class="kicker" style="color:var(--hyein-ink)">라일락</span>
+        <span class="kicker" style="color:var(--hyein-ink)">라일락 · 사람</span>
         <h3>혜인</h3>
-        <p>내 개인 일정. 건강, 가족, 취미, 집안일처럼 나 혼자 챙기는 것들.
-          기본으로 열리는 갈래입니다.</p>
+        <p>혜인의 개인 일정. 건강·가족·취미·집안일.
+          <b>혜인만 체크할 수 있고</b> 민우는 볼 수 있습니다.</p>
       </div>
       <div class="card" style="box-shadow:inset 4px 0 0 var(--minwoo), var(--soft-shadow)">
-        <span class="kicker" style="color:var(--minwoo-ink)">스카이</span>
+        <span class="kicker" style="color:var(--minwoo-ink)">스카이 · 사람</span>
         <h3>민우</h3>
-        <p>민우의 일정. 출장·야근처럼 <b>내가 하는 일이 아니라 알고 있어야 하는 일</b>이라,
-          체크는 안 해도 되고 그냥 표시만 됩니다.</p>
+        <p>민우의 개인 일정. <b>민우만 체크할 수 있고</b> 혜인은 볼 수 있습니다.
+          상대 화면에서는 체크박스 대신 점으로 보입니다.</p>
       </div>
       <div class="card" style="box-shadow:inset 4px 0 0 var(--work), var(--soft-shadow)">
-        <span class="kicker" style="color:var(--work-ink)">마리골드</span>
+        <span class="kicker" style="color:var(--work-ink)">버밀리언 · 일</span>
         <h3>업무</h3>
-        <p>회사 일. 사람 둘은 시원한 색(라일락·스카이)으로 묶고,
-          업무만 따뜻한 색으로 떼어 성격이 다른 갈래임을 드러냅니다.</p>
+        <p>둘 다 씁니다. 항목마다 누구 것인지 아바타가 붙고,
+          <b>내 것만</b> 토글로 걸러 볼 수 있습니다.</p>
       </div>
     </div>
+    <p class="note" style="margin-top:16px">
+      빨강은 <b>업무 갈래 전용</b>입니다. 지연·마감 같은 경고에는 어떤 색도 쓰지 않으므로
+      빨강이 "큰일 났다"로 읽힐 일이 없습니다.
+    </p>
   </section>
 
-  <!-- 뺀 것 / 남긴 것 -->
+  <!-- 같이 쓰기 -->
   <section class="band">
     <div class="band-head">
-      <p class="eyebrow">부담을 만들지 않기 위해</p>
-      <h2>덜어낸 것과 남긴 것</h2>
-      <p>부담의 원인은 대부분 "시간을 정하라고 요구하는" 요소였습니다. 그것부터 뺐습니다.</p>
+      <p class="eyebrow">공유 규칙</p>
+      <h2>둘이 같이 쓴다는 것</h2>
+      <p>같이 쓰는 앱이 어려워지는 건 대개 "누가 뭘 할 수 있는지"가 흐릿해서입니다.
+        규칙을 셋으로 줄였습니다.</p>
     </div>
-    <div class="cols c2">
-      <div class="card quiet">
-        <span class="kicker">뺀 것</span>
-        <p style="line-height:2">
-          <span class="strike">주간 시간표(08–20시 격자)</span><br>
-          <span class="strike">일정 블록 · 시작/종료 시각</span><br>
-          <span class="strike">현재 시각 라인</span><br>
-          <span class="strike">소요 시간 예측 · 드래그 배치</span><br>
-          <span class="strike">지연 경고 배지</span><br>
-          <span class="strike">달력 칸 안의 일정 이름</span><br>
-          <span class="strike">아침 · 낮 · 저녁 구분</span>
-        </p>
+    <div class="cols c3">
+      <div class="card">
+        <span class="kicker">01</span>
+        <h3>체크는 자기 것만</h3>
+        <p>상대 갈래의 항목은 <b>체크박스가 아예 나타나지 않고</b> 작은 점으로 보입니다.
+          누를 수 없다는 걸 눌러 보기 전에 압니다.</p>
       </div>
       <div class="card">
-        <span class="kicker">남긴 것</span>
-        <p style="line-height:2">
-          체크리스트 하나 — 그게 본체입니다<br>
-          <b>혜인 · 민우 · 업무</b> 세 갈래 구분<br>
-          <b>항상 떠 있는 월간 달력</b><br>
-          날짜별 · 주간 훑어보기<br>
-          순서가 필요하면 손으로 끌어 옮기기<br>
-          날짜 없이 담아두는 "언젠가"
-        </p>
+        <span class="kicker">02</span>
+        <h3>같이 하는 일은 한 번만</h3>
+        <p><span class="together"><span class="av h">혜</span><span class="av m stack">민</span>같이</span>
+          배지가 붙은 항목은 둘 다 체크할 수 있고, 한 명이 체크하면 양쪽에서 완료됩니다.</p>
+      </div>
+      <div class="card">
+        <span class="kicker">03</span>
+        <h3>이름은 보는 사람 기준</h3>
+        <p>민우가 열면 왼쪽 칸이 <b>민우</b>가 됩니다. 언제나 자기 갈래가 왼쪽,
+          상대가 가운데, 업무가 오른쪽입니다.</p>
       </div>
     </div>
   </section>
@@ -441,13 +465,12 @@
         <span class="kicker">01</span>
         <h3>시간이 아예 없다</h3>
         <p>시각도, 아침·낮·저녁 같은 구간도 없습니다. 순서가 신경 쓰이면
-          <b>목록에서 위로 끌어 올리면</b> 됩니다. 그게 전부입니다.</p>
+          <b>목록에서 위로 끌어 올리면</b> 됩니다.</p>
       </div>
       <div class="card">
         <span class="kicker">02</span>
         <h3>달력은 읽는 곳</h3>
-        <p>칸 안에 글씨를 넣지 않습니다. 얇은 막대 세 줄로 <b>그날의 양</b>만 보여줍니다.
-          빽빽한 날과 한가한 날이 형태로 읽힙니다.</p>
+        <p>칸 안에 글씨를 넣지 않습니다. 얇은 막대 세 줄로 <b>그날의 양</b>만 보여줍니다.</p>
       </div>
       <div class="card">
         <span class="kicker">03</span>
@@ -457,9 +480,9 @@
       </div>
       <div class="card">
         <span class="kicker">04</span>
-        <h3>구분은 색 + 자리</h3>
-        <p>혜인 · 민우 · 업무는 <b>어디서나 이 순서</b>입니다 — 왼쪽에서 오른쪽, 위에서 아래.
-          색이 헷갈려도 자리로 구분됩니다.</p>
+        <h3>재촉하지 않는다</h3>
+        <p>상대가 안 한 일에 대한 알림은 없습니다.
+          <b>독촉 버튼도, 콕 찌르기도 넣지 않습니다.</b></p>
       </div>
     </div>
   </section>
@@ -469,7 +492,7 @@
     <div class="band-head">
       <p class="eyebrow">화면 시안</p>
       <h2>실제 크기로 그린 화면</h2>
-      <p>색·간격·글자 크기가 그대로 구현 기준이 됩니다.</p>
+      <p>색·간격·글자 크기가 그대로 구현 기준이 됩니다. 아래는 <b>혜인이 로그인한 화면</b>입니다.</p>
     </div>
 
     <div class="shot-cap">
@@ -484,7 +507,9 @@
         <div class="app">
 
           <aside class="calpane">
-            <div class="brand"><span class="mk"></span> 하루 <span class="who">혜인</span></div>
+            <div class="brand"><span class="mk"></span> 하루
+              <span class="avpair"><span class="av h">혜</span><span class="av m stack">민</span></span>
+            </div>
 
             <div>
               <div class="cal-top">
@@ -557,7 +582,7 @@
               <div class="g-row"><span class="sw" style="background:var(--hyein)"></span>
                 <span class="lb">혜인</span><span class="vl"><b>2</b> 남음</span></div>
               <div class="g-row"><span class="sw" style="background:var(--minwoo)"></span>
-                <span class="lb">민우</span><span class="vl"><b>1</b> 건</span></div>
+                <span class="lb">민우</span><span class="vl"><b>3</b> 건</span></div>
               <div class="g-row"><span class="sw" style="background:var(--work)"></span>
                 <span class="lb">업무</span><span class="vl"><b>2</b> 남음</span></div>
               <div class="g-row"><span class="sw" style="background:var(--faint)"></span>
@@ -592,6 +617,7 @@
               <section class="lane">
                 <div class="lane-h h">
                   <span class="dotmk"></span><span class="nm">혜인</span>
+                  <span class="tag2">나</span>
                   <span class="ct">2 남음</span>
                 </div>
 
@@ -619,42 +645,50 @@
                   <span class="tx">전기요금 내기</span>
                 </div>
 
-                <div class="adder">＋ 혜인 할 일</div>
+                <div class="adder">＋ 내 할 일</div>
               </section>
 
               <!-- 민우 -->
               <section class="lane">
                 <div class="lane-h m">
                   <span class="dotmk"></span><span class="nm">민우</span>
-                  <span class="tag2">알아두기</span>
-                  <span class="ct">1 건</span>
+                  <span class="tag2">보기만</span>
+                  <span class="ct">3 건</span>
+                </div>
+
+                <div class="item">
+                  <span class="box m ro"></span>
+                  <span class="tx">야근
+                    <span class="sub">저녁 약속은 다른 날로</span></span>
+                </div>
+
+                <div class="item" style="background:var(--minwoo-soft)">
+                  <span class="box m ro"></span>
+                  <span class="tx">부산 출장
+                    <span class="sub">8/12 – 8/14 · 6일 남음</span></span>
                 </div>
 
                 <div class="item">
                   <span class="box m"></span>
-                  <span class="tx">민우 야근
-                    <span class="sub">저녁 약속 잡지 않기</span></span>
+                  <span class="tx">공항 데려다주기</span>
+                  <span class="together"><span class="av h">혜</span><span class="av m stack">민</span>같이</span>
                 </div>
 
-                <div class="item flat" style="background:var(--minwoo-soft)">
-                  <span class="box m"></span>
-                  <span class="tx">다음 주 출장 (8/12–14)
-                    <span class="sub">미리 보기 · 6일 남음</span></span>
+                <div class="item flat is-done">
+                  <span class="box m done"></span>
+                  <span class="tx">건강검진 예약</span>
                 </div>
 
-                <div class="item flat" style="opacity:.75">
-                  <span class="box m"></span>
-                  <span class="tx">민우 생일
-                    <span class="sub">8/22 · 16일 남음</span></span>
-                </div>
-
-                <div class="adder">＋ 민우 일정</div>
+                <p class="ro-note">민우 것은 민우만 체크할 수 있어요.
+                  <br>＋ 로 적으면 민우에게 제안으로 갑니다.</p>
+                <div class="adder">＋ 민우에게 제안</div>
               </section>
 
               <!-- 업무 -->
               <section class="lane">
                 <div class="lane-h w">
                   <span class="dotmk"></span><span class="nm">업무</span>
+                  <span class="tag2">내 것만</span>
                   <span class="ct">2 남음</span>
                 </div>
 
@@ -668,6 +702,7 @@
                   <span class="box w"></span>
                   <span class="tx">분기 리포트 초안 읽어보기
                     <span class="sub">내일까지</span></span>
+                  <span class="av h">혜</span>
                 </div>
 
                 <div class="fold">완료한 2개 보기 ▾</div>
@@ -689,9 +724,10 @@
       </div>
     </div>
     <p class="note" style="margin-top:16px">
-      <b>민우 갈래는 성격이 다릅니다.</b> 내가 해야 할 일이 아니라 <em>알고 있어야 하는 일</em>이라서,
-      체크하지 않아도 하루가 끝나고 "남았다"고 세지 않습니다 — 그래서 개수도 "2 남음"이 아니라 "1 건"입니다.<br>
-      달력 칸에는 여전히 <b>글자가 하나도 없습니다.</b> 날짜 숫자와 얇은 막대 세 줄뿐입니다.
+      민우 칸의 <b>야근 · 부산 출장</b>은 체크박스가 아니라 <b>점</b>입니다 — 혜인이 체크할 수 없다는 뜻이고,
+      완료를 세지도 않아 개수가 "3 남음"이 아니라 <b>"3 건"</b>입니다.<br>
+      <b>공항 데려다주기</b>만 <span class="together" style="display:inline-flex;vertical-align:-4px"><span class="av h">혜</span><span class="av m stack">민</span>같이</span>
+      배지가 붙어 체크박스가 살아 있습니다. 둘 중 누가 체크해도 양쪽에서 끝납니다.
     </p>
   </section>
 
@@ -709,7 +745,9 @@
         <div class="app">
 
           <aside class="calpane">
-            <div class="brand"><span class="mk"></span> 하루 <span class="who">혜인</span></div>
+            <div class="brand"><span class="mk"></span> 하루
+              <span class="avpair"><span class="av h">혜</span><span class="av m stack">민</span></span>
+            </div>
             <div>
               <div class="cal-top">
                 <span class="mo">8월</span><span class="yr">2026</span>
@@ -771,14 +809,15 @@
 
             <div class="legend">
               선택한 주가 달력에서 <b style="color:var(--ink-2)">테두리</b>로 표시됩니다.<br>
-              다른 주를 누르면 오른쪽이 그 주로 바뀝니다.
+              라일락과 스카이만 있고 <b style="color:var(--work-ink)">빨강이 없는 날</b>이
+              둘 다 여유 있는 날입니다.
             </div>
 
             <div class="glance">
               <div class="g-row"><span class="sw" style="background:var(--hyein)"></span>
                 <span class="lb">혜인</span><span class="vl"><b>5</b> 남음</span></div>
               <div class="g-row"><span class="sw" style="background:var(--minwoo)"></span>
-                <span class="lb">민우</span><span class="vl"><b>3</b> 건</span></div>
+                <span class="lb">민우</span><span class="vl"><b>4</b> 건</span></div>
               <div class="g-row"><span class="sw" style="background:var(--work)"></span>
                 <span class="lb">업무</span><span class="vl"><b>9</b> 남음</span></div>
             </div>
@@ -824,7 +863,7 @@
                   <div class="mini-item is-done"><span class="mbox w done"></span><span>디자인 피드백</span></div>
                   <div class="mini-item"><span class="mbox w"></span><span>API 문서 정리</span></div>
                   <div class="mini-item is-done"><span class="mbox h done"></span><span>요가</span></div>
-                  <div class="mini-item"><span class="mbox m"></span><span>민우 회식</span></div>
+                  <div class="mini-item"><span class="mbox m ro"></span><span>민우 회식</span></div>
                   <div class="wadd">＋</div>
                 </div>
 
@@ -839,7 +878,7 @@
                   <div class="wh"><div class="dw">목 · 오늘</div><div class="dd">6</div></div>
                   <div class="mini-item"><span class="mbox h"></span><span>생신 선물 고르기</span></div>
                   <div class="mini-item"><span class="mbox h"></span><span>제주 여행 준비</span></div>
-                  <div class="mini-item"><span class="mbox m"></span><span>민우 야근</span></div>
+                  <div class="mini-item"><span class="mbox m ro"></span><span>민우 야근</span></div>
                   <div class="mini-item"><span class="mbox w"></span><span>스프린트 리뷰 자료</span></div>
                   <div class="mini-item"><span class="mbox w"></span><span>리포트 초안 읽기</span></div>
                   <div class="wadd">＋</div>
@@ -847,7 +886,7 @@
 
                 <div class="wcol">
                   <div class="wh"><div class="dw">금</div><div class="dd">7</div></div>
-                  <div class="mini-item"><span class="mbox m"></span><span>민우 반차</span></div>
+                  <div class="mini-item"><span class="mbox m ro"></span><span>민우 반차</span></div>
                   <div class="mini-item"><span class="mbox w"></span><span>리포트 제출</span></div>
                   <div class="mini-item"><span class="mbox w"></span><span>회고 메모</span></div>
                   <div class="wadd">＋</div>
@@ -869,8 +908,8 @@
     <p class="note" style="margin-top:16px">
       주간도 <b>그냥 목록 7개</b>입니다. 시간 격자가 없으니 "비어 있는 시간"이 보이지 않고,
       따라서 채워야 한다는 압박도 생기지 않습니다.<br>
-      민우 항목이 섞여 있어 <b>"이번 주에 같이 볼 수 있는 날"</b>이 한눈에 보입니다 —
-      8일 토요일처럼 라일락과 스카이가 같이 있는 칸입니다.
+      빨강이 확실히 튀기 때문에 <b>일이 몰린 날</b>과 <b>둘만의 날</b>이 색만 보고도 갈립니다 —
+      8일 토요일처럼 라일락과 스카이만 있는 칸입니다.
     </p>
   </section>
 
@@ -884,14 +923,14 @@
     <div class="scroller">
       <div class="phones">
 
-        <!-- 폰 1 -->
+        <!-- 폰 1 : 혜인 화면 -->
         <div class="phone">
           <div class="glass">
             <div class="status"><span>9:41</span><span>▮▮▮</span></div>
             <div class="m-cal">
               <div class="m-caltop">
                 <span class="mo">8월</span><span class="yr">2026</span>
-                <span class="arrows" style="margin-left:auto"><span>‹</span><span>›</span></span>
+                <span class="avpair" style="margin-left:auto"><span class="av h">혜</span><span class="av m stack">민</span></span>
               </div>
               <div class="cal">
                 <div class="wd sun">일</div><div class="wd">월</div><div class="wd">화</div>
@@ -936,19 +975,19 @@
                   <span class="sub">혜인 · 이번 주 안에</span></span>
               </div>
               <div class="item" style="padding:9px 11px">
+                <span class="box m ro"></span>
+                <span class="tx">야근
+                  <span class="sub">민우 · 보기만</span></span>
+              </div>
+              <div class="item" style="padding:9px 11px">
                 <span class="box m"></span>
-                <span class="tx">민우 야근
-                  <span class="sub">민우 · 알아두기</span></span>
+                <span class="tx">공항 데려다주기</span>
+                <span class="together"><span class="av h">혜</span><span class="av m stack">민</span></span>
               </div>
               <div class="item" style="padding:9px 11px">
                 <span class="box w"></span>
                 <span class="tx">스프린트 리뷰 자료 마무리
                   <span class="sub">업무</span></span>
-              </div>
-              <div class="item" style="padding:9px 11px">
-                <span class="box w"></span>
-                <span class="tx">분기 리포트 초안 읽어보기
-                  <span class="sub">업무 · 내일까지</span></span>
               </div>
               <div class="item flat is-done" style="padding:9px 11px">
                 <span class="box h done"></span>
@@ -961,60 +1000,61 @@
               <div class="on"><span class="ic"></span>하루</div>
               <div><span class="ic"></span>이번 주</div>
               <div><span class="ic"></span>언젠가</div>
-              <div><span class="ic"></span>나</div>
+              <div><span class="ic"></span>우리</div>
             </div>
           </div>
-          <p class="p-cap"><b>기본 화면.</b> 달력이 위쪽에 늘 붙어 있고 아래만 스크롤됩니다.
-            세 갈래가 섞여 시간 순이 아니라 <b>혜인 → 민우 → 업무</b> 순으로 놓입니다.</p>
+          <p class="p-cap"><b>혜인 화면.</b> 세 갈래가 섞여 <b>혜인 → 민우 → 업무</b> 순으로 놓입니다.
+            민우 것은 점, 같이 하는 일은 체크박스.</p>
         </div>
 
-        <!-- 폰 2 -->
+        <!-- 폰 2 : 민우 화면 -->
         <div class="phone">
           <div class="glass">
             <div class="status"><span>9:41</span><span>▮▮▮</span></div>
-            <div class="m-cal" style="padding-bottom:8px">
+            <div class="m-cal" style="background:linear-gradient(168deg, var(--hyein-soft) 0%, var(--minwoo-soft) 55%, var(--surface-2) 100%)">
               <div class="m-caltop">
                 <span class="mo">8월</span><span class="yr">2026</span>
-                <span class="arrows" style="margin-left:auto"><span>‹</span><span>›</span></span>
+                <span class="avpair" style="margin-left:auto"><span class="av m">민</span><span class="av h stack">혜</span></span>
               </div>
               <div class="cal">
                 <div class="wd sun">일</div><div class="wd">월</div><div class="wd">화</div>
                 <div class="wd">수</div><div class="wd">목</div><div class="wd">금</div><div class="wd">토</div>
                 <div class="day rest"><span class="n">9</span></div>
-                <div class="day"><span class="n">10</span><span class="load"><i class="h w2"></i><i class="w w2"></i></span></div>
+                <div class="day"><span class="n">10</span><span class="load"><i class="m w1"></i><i class="h w2"></i><i class="w w2"></i></span></div>
                 <div class="day"><span class="n">11</span><span class="load"><i class="m w2"></i><i class="w w1"></i></span></div>
                 <div class="day pick"><span class="n">12</span><span class="load"><i class="m w3"></i><i class="w w3"></i></span></div>
                 <div class="day"><span class="n">13</span><span class="load"><i class="m w3"></i><i class="w w1"></i></span></div>
-                <div class="day"><span class="n">14</span><span class="load"><i class="h w3"></i><i class="m w3"></i></span></div>
-                <div class="day rest"><span class="n">15</span><span class="load"><i class="h w2"></i><i class="m w1"></i></span></div>
+                <div class="day"><span class="n">14</span><span class="load"><i class="m w3"></i><i class="h w3"></i></span></div>
+                <div class="day rest"><span class="n">15</span><span class="load"><i class="m w1"></i><i class="h w2"></i></span></div>
               </div>
             </div>
 
             <div class="m-body">
               <div class="m-dhead">
                 <span class="dt">8월 12일 수</span>
-                <span class="rt">4개</span>
+                <span class="rt">3개</span>
               </div>
-              <div class="m-seg"><span>전체</span><span>혜인</span><span class="on">민우</span><span>업무</span></div>
+              <div class="m-seg"><span>전체</span><span class="on">민우</span><span>혜인</span><span>업무</span></div>
 
               <div class="item" style="padding:9px 11px; background:var(--minwoo-soft)">
                 <span class="box m"></span>
-                <span class="tx">출장 첫날 — 부산
+                <span class="tx">부산 출장 첫날
                   <span class="sub">8/12 – 8/14 · 3일간</span></span>
               </div>
               <div class="item" style="padding:9px 11px">
                 <span class="box m"></span>
-                <span class="tx">공항 데려다주기
-                  <span class="sub">민우</span></span>
-                <span class="shared">같이</span>
+                <span class="tx">공항 데려다주기</span>
+                <span class="together"><span class="av m">민</span><span class="av h stack">혜</span></span>
               </div>
               <div class="item" style="padding:9px 11px">
-                <span class="box m"></span>
-                <span class="tx">고양이 사료 내가 챙기기
-                  <span class="sub">민우 없는 동안</span></span>
+                <span class="box h ro"></span>
+                <span class="tx">고양이 사료 챙기기
+                  <span class="sub">혜인 · 보기만</span></span>
               </div>
 
-              <div class="adder" style="margin-top:4px">＋ 이 날에 적기</div>
+              <div class="feedrow">
+                <span class="av h">혜</span> 혜인이 <b style="color:var(--ink-2)">공항 데려다주기</b>를 제안했어요
+              </div>
             </div>
 
             <div class="fab">＋</div>
@@ -1022,18 +1062,18 @@
               <div class="on"><span class="ic"></span>하루</div>
               <div><span class="ic"></span>이번 주</div>
               <div><span class="ic"></span>언젠가</div>
-              <div><span class="ic"></span>나</div>
+              <div><span class="ic"></span>우리</div>
             </div>
           </div>
-          <p class="p-cap"><b>갈래만 보기 · 달력 접기.</b> 위로 쓸어올리면 달력이 그 주 한 줄로 줄어듭니다.
-            민우만 켜면 그 사람 일정만 남습니다.</p>
+          <p class="p-cap"><b>민우 화면.</b> 같은 데이터인데 <b>자기 갈래가 왼쪽</b>으로 옵니다.
+            달력 막대 순서도 민우가 위로 올라갑니다.</p>
         </div>
 
-        <!-- 폰 3 -->
+        <!-- 폰 3 : 적기 -->
         <div class="phone">
           <div class="glass">
             <div class="status"><span>9:41</span><span>▮▮▮</span></div>
-            <div class="m-cal" style="opacity:.32">
+            <div class="m-cal" style="opacity:.3">
               <div class="m-caltop"><span class="mo">8월</span><span class="yr">2026</span></div>
               <div class="cal">
                 <div class="wd sun">일</div><div class="wd">월</div><div class="wd">화</div>
@@ -1047,7 +1087,7 @@
                 <div class="day rest"><span class="n">8</span></div>
               </div>
             </div>
-            <div class="m-body" style="opacity:.32">
+            <div class="m-body" style="opacity:.3">
               <div class="item" style="padding:9px 11px"><span class="box h"></span>
                 <span class="tx">어머니 생신 선물 고르기</span></div>
               <div class="item" style="padding:9px 11px"><span class="box w"></span>
@@ -1055,31 +1095,31 @@
             </div>
 
             <div class="quick">
-              <div class="inp">민우 부모님 저녁 <em>|</em></div>
+              <div class="inp">분기 리포트 제출 <em>|</em></div>
               <div class="chipset">
                 <span>혜인</span>
-                <span class="on-m">민우</span>
-                <span>업무</span>
-                <span>오늘</span>
-                <span>내일</span>
-                <span>이번 주</span>
-                <span>언젠가</span>
+                <span>민우</span>
+                <span class="on-w">업무</span>
+                <span class="on-t">＋ 같이</span>
+              </div>
+              <div class="chipset" style="margin-top:7px">
+                <span>오늘</span><span>내일</span><span>이번 주</span><span>언젠가</span>
               </div>
               <div class="hintline">
-                "민우"라고 쓰면 갈래가 <b style="color:var(--ink-2)">민우</b>로 미리 잡힙니다.
-                날짜를 안 고르면 <b style="color:var(--ink-2)">언젠가</b>에 담깁니다.
+                갈래 하나만 누르면 저장됩니다. <b style="color:var(--ink-2)">＋ 같이</b>를 켜면
+                둘 다 체크할 수 있는 일이 됩니다.
               </div>
             </div>
 
-            <div class="tabbar" style="opacity:.32">
+            <div class="tabbar" style="opacity:.3">
               <div class="on"><span class="ic"></span>하루</div>
               <div><span class="ic"></span>이번 주</div>
               <div><span class="ic"></span>언젠가</div>
-              <div><span class="ic"></span>나</div>
+              <div><span class="ic"></span>우리</div>
             </div>
           </div>
-          <p class="p-cap"><b>적기.</b> 제목만 쓰면 끝. 갈래 하나만 누르면 되고,
-            날짜는 안 골라도 됩니다.</p>
+          <p class="p-cap"><b>적기.</b> 제목만 쓰면 끝. 갈래 하나 누르고,
+            같이 하는 일이면 <b>＋ 같이</b>만 더 누릅니다.</p>
         </div>
 
       </div>
@@ -1116,22 +1156,23 @@
           <i class="w1" style="height:3px;background:var(--minwoo);border-radius:99px;display:block"></i>
           <i class="w3" style="height:3px;background:var(--work);border-radius:99px;display:block"></i>
         </div>
-        <p><b>혜인 · 민우 · 업무</b> 순서가 고정입니다. 색을 몰라도 자리로 구분됩니다.</p>
+        <p><b>나 · 상대 · 업무</b> 순서 고정. 민우가 보면 스카이가 맨 위로 올라갑니다.</p>
       </div>
       <div class="card">
-        <span class="kicker">회색이면</span>
-        <div style="margin:12px 0 8px;width:22px">
-          <i class="w2" style="height:3px;background:var(--line);border-radius:99px;display:block"></i>
+        <span class="kicker">빨강이 길면</span>
+        <div style="display:flex;flex-direction:column;gap:4px;margin:12px 0 8px;width:22px">
+          <i class="w1" style="height:3px;background:var(--hyein);border-radius:99px;display:block"></i>
+          <i class="w3" style="height:3px;background:var(--work);border-radius:99px;display:block"></i>
         </div>
-        <p>다 끝냈거나 이미 지나간 날. 회색은 <b>신경 쓸 필요 없다</b>는 뜻입니다.</p>
+        <p>일에 잡아먹힌 날. <b>약속을 잡기 전에 먼저 보이는 신호</b>입니다.</p>
       </div>
       <div class="card">
-        <span class="kicker">두 색이 같이 있으면</span>
+        <span class="kicker">빨강이 없으면</span>
         <div style="display:flex;flex-direction:column;gap:4px;margin:12px 0 8px;width:22px">
           <i class="w2" style="height:3px;background:var(--hyein);border-radius:99px;display:block"></i>
           <i class="w2" style="height:3px;background:var(--minwoo);border-radius:99px;display:block"></i>
         </div>
-        <p>라일락과 스카이가 나란히 있는 날이 <b>둘 다 시간이 되는 날</b>입니다.</p>
+        <p>라일락과 스카이만 있는 날 = <b>둘 다 여유 있는 날</b>입니다.</p>
       </div>
     </div>
   </section>
@@ -1162,9 +1203,14 @@
             <td>시간 개념이 <b>아예 없다.</b> 목록에서 위로 끌어 올리면 끝</td>
           </tr>
           <tr>
-            <td class="q">민우 일정이 밀렸을 때</td>
-            <td>내 할 일과 똑같이 "미완료"로 쌓인다</td>
-            <td>민우 갈래는 <b>완료를 세지 않는다.</b> 알아두는 정보일 뿐</td>
+            <td class="q">상대가 안 했을 때</td>
+            <td>"콕 찌르기", 독촉 알림을 보낸다</td>
+            <td><b>재촉 기능을 넣지 않는다.</b> 보이기만 하고 아무 일도 안 일어남</td>
+          </tr>
+          <tr>
+            <td class="q">상대 할 일을 대신 지우고 싶을 때</td>
+            <td>같이 쓰니까 누구나 수정할 수 있다</td>
+            <td>상대 갈래는 <b>읽기 전용.</b> 적으면 <b>제안</b>으로 전달됨</td>
           </tr>
           <tr>
             <td class="q">언제 할지 모를 때</td>
@@ -1191,10 +1237,9 @@
     <div class="band-head">
       <p class="eyebrow">디자인 토큰</p>
       <h2>색과 글자</h2>
-      <p>사람 둘은 시원한 색(<b>라일락 · 스카이</b>)으로 묶고, 업무만 따뜻한
-        <b>마리골드</b>로 떼어냅니다. 각 색은 밝은 값(막대·체크 같은 표시용)과
-        짙은 값(글자용) <b>두 벌</b>로 씁니다 — 화면은 화사하고 글자는 또렷합니다.
-        경고용 빨강은 팔레트에 없습니다.</p>
+      <p>사람 둘은 이웃한 시원한 색(<b>라일락 · 스카이</b>)으로 묶고, 업무만 색상환 반대편
+        <b>버밀리언</b>으로 뺐습니다. 각 색은 밝은 값(막대·체크 표시용)과 짙은 값(글자용)
+        <b>두 벌</b>로 씁니다 — 화면은 화사하고 글자는 또렷합니다.</p>
     </div>
     <div class="swrow">
       <div class="swbox"><div class="fill split">
@@ -1205,7 +1250,7 @@
         <div class="mt"><b>민우 · 스카이</b>#3E9DE8<br>글자 #16639F</div></div>
       <div class="swbox"><div class="fill split">
           <span style="background:var(--work)"></span><span style="background:var(--work-ink)"></span></div>
-        <div class="mt"><b>업무 · 마리골드</b>#F2A93E<br>글자 #8F6100</div></div>
+        <div class="mt"><b>업무 · 버밀리언</b>#F5503C<br>글자 #C0301F</div></div>
       <div class="swbox"><div class="fill" style="background:var(--ink)"></div>
         <div class="mt"><b>글자 · 오늘</b>딥인디고<br>#1E2A4A</div></div>
       <div class="swbox"><div class="fill" style="background:var(--paper)"></div>
@@ -1215,22 +1260,22 @@
     </div>
     <div class="cols c3" style="margin-top:14px">
       <div class="card">
-        <span class="kicker">색 온도로 나눈 이유</span>
-        <h3>사람 둘 vs 일</h3>
-        <p>세 색을 균등하게 벌리면 무지개가 됩니다. 대신 사람 둘은 이웃한 시원한 색으로 묶고
-          업무만 반대편 따뜻한 색에 둬, <b>"내 삶 / 회사"</b> 경계가 색 온도로 읽히게 했습니다.</p>
+        <span class="kicker">빨강을 쓸 수 있는 이유</span>
+        <h3>경고에 색을 쓰지 않으니까</h3>
+        <p>지연·마감을 색으로 알리는 앱에서는 빨강을 갈래에 못 씁니다.
+          여기는 <b>경고 자체가 없어서</b> 빨강이 비어 있었습니다. 그 자리를 업무가 씁니다.</p>
       </div>
       <div class="card">
-        <span class="kicker">형태</span>
-        <h3>선 대신 면</h3>
-        <p>격자선을 지우고 옅은 면과 여백으로 나눕니다. 모서리는 10–12px로
-          둥글게, 막대는 완전히 둥글게, 그림자는 거의 없이.</p>
+        <span class="kicker">체크할 수 없음의 표현</span>
+        <h3>회색 체크박스 대신 점</h3>
+        <p>흐린 체크박스는 "지금은 안 되지만 언젠가 될 것"처럼 보입니다.
+          아예 <b>다른 모양(점)</b>으로 바꾸면 눌러 볼 생각이 들지 않습니다.</p>
       </div>
       <div class="card">
         <span class="kicker">접근성</span>
         <h3>색 없이도 읽힌다</h3>
-        <p>라일락과 스카이는 둘 다 시원한 계열이라 색만으로는 헷갈릴 수 있습니다.
-          그래서 <b>혜인 → 민우 → 업무</b> 순서를 어디서나 고정했습니다. 터치 영역 44px 이상.</p>
+        <p>라일락과 스카이는 같은 한색 계열이라 <b>나 · 상대 · 업무</b> 순서를 어디서나 고정했습니다.
+          빨강은 명도까지 달라 흑백에서도 구분됩니다. 터치 영역 44px 이상.</p>
       </div>
     </div>
   </section>
@@ -1246,10 +1291,10 @@
       <table>
         <thead><tr><th>폭</th><th>달력</th><th>할 일</th></tr></thead>
         <tbody>
-          <tr><td class="q">≥1280 데스크톱</td><td>왼쪽 고정 패널 · 한 달 전체</td><td>혜인 · 민우 · 업무 3단</td></tr>
+          <tr><td class="q">≥1280 데스크톱</td><td>왼쪽 고정 패널 · 한 달 전체</td><td>나 · 상대 · 업무 3단</td></tr>
           <tr><td class="q">1000–1279</td><td>왼쪽 고정 · 패널 폭만 축소</td><td>3단 유지 (카드 폭 축소)</td></tr>
-          <tr><td class="q">700–999 태블릿</td><td>왼쪽 고정 · 한 달 전체</td><td>혜인·민우 2단 + 업무 아래 전체 폭</td></tr>
-          <tr><td class="q">&lt;700 모바일</td><td>상단 고정 · 스크롤 시 그 주 한 줄로 축소</td><td>한 줄 목록. 갈래 칩으로 걸러 보기</td></tr>
+          <tr><td class="q">700–999 태블릿</td><td>왼쪽 고정 · 한 달 전체</td><td>나·상대 2단 + 업무 아래 전체 폭</td></tr>
+          <tr><td class="q">&lt;700 모바일</td><td>상단 고정 · 스크롤 시 그 주 한 줄로 축소</td><td>한 줄 목록 + 갈래 칩 필터</td></tr>
         </tbody>
       </table>
     </div>
@@ -1263,22 +1308,22 @@
     </div>
     <div class="askbox">
       <ol>
-        <li><b>업무 색(마리골드)이 괜찮나요?</b> 사람 둘을 시원한 색으로 묶으려고
-          업무만 따뜻한 색으로 뺐습니다. 셋 다 시원한 계열(민트 등)로 가는 것도 가능합니다.</li>
-        <li><b>민우 갈래에 체크박스가 필요한가요?</b> 지금은 "알아두는 정보"라
-          완료를 세지 않습니다. 같이 하는 일(공항 데려다주기 등)은 체크가 되는 게 나을까요?</li>
-        <li><b>민우 일정을 직접 적나요, 공유받나요?</b>
-          공유라면 초대·동기화·수정 권한 화면이 추가로 필요합니다. 지금은 <em>내가 적는 것</em> 전제입니다.</li>
-        <li><b>갈래를 더 늘릴 수 있어야 하나요?</b> 3개까지는 좌우 3단이 성립합니다.
-          4개 이상이면 접히는 목록 구조로 바꿔야 합니다.</li>
-        <li><b>알림</b> — 지금 설계엔 독촉 알림이 없습니다.
-          아침에 한 번 "오늘 3개 있어요" 정도만 둘까요, 아니면 아예 없앨까요?</li>
+        <li><b>업무 갈래를 서로 볼 수 있나요?</b> 지금은 둘 다 쓰되 항목에 아바타가 붙고
+          기본은 <em>내 것만</em> 보기입니다. 아예 서로 안 보이게 하거나, 반대로 전부 공개할 수도 있습니다.</li>
+        <li><b>"제안" 기능이 필요한가요?</b> 상대 갈래에 내가 적으면 제안으로 전달되고
+          상대가 받아야 들어갑니다. 그냥 못 적게 막는 게 단순할 수도 있습니다.</li>
+        <li><b>알림</b> — 재촉 알림은 없습니다. 다만
+          <em>"민우가 8/12 출장을 추가했어요"</em> 같은 <b>변경 알림</b>은 필요할까요?</li>
+        <li><b>연결 방식</b> — 초대 링크 하나로 묶는 방식을 생각했습니다.
+          계정을 따로 만들지 않고 링크만으로 되게 할지 정해야 합니다.</li>
+        <li><b>다음 단계</b> — ① 클릭 가능한 프로토타입 ② 프론트엔드 골격 구현
+          ③ 데이터 모델·동기화 설계. 어디부터 갈까요?</li>
       </ol>
     </div>
   </section>
 
   <p class="note" style="margin-top:44px">
-    하루 · 화면 설계 v0.5 · 2026-08-06 · 논의용 초안 — 제품명 "하루"는 가칭입니다.
+    하루 · 화면 설계 v0.6 · 2026-08-06 · 논의용 초안 — 제품명 "하루"는 가칭입니다.
   </p>
 
 </div>
