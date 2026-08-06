@@ -11,12 +11,13 @@
   ],
   "scripts": {
     "dev": "npm-run-all --parallel dev:server dev:web",
-    "dev:server": "npm run dev --workspace @haru/server",
-    "dev:web": "npm run dev --workspace @haru/web",
-    "build": "npm run build --workspace @haru/web",
-    "start": "npm run start --workspace @haru/server",
-    "test": "npm test --workspace @haru/server",
-    "typecheck": "npm run typecheck --workspace @haru/web"
+    "//workspace": "--workspace 는 run 앞에 둔다. 스크립트 이름 뒤에 두면 npm 버전에 따라 스크립트 인자로 넘어가 무시되고, 모든 워크스페이스에서 실행된다.",
+    "dev:server": "npm --workspace @haru/server run dev",
+    "dev:web": "npm --workspace @haru/web run dev",
+    "build": "npm --workspace @haru/web run build",
+    "start": "npm --workspace @haru/server run start",
+    "test": "npm --workspace @haru/server run test",
+    "typecheck": "npm --workspace @haru/web run typecheck"
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5"

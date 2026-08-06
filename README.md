@@ -13,6 +13,8 @@ npm run build
 npm start                 # http://localhost:4000
 ```
 
+빌드 결과물은 저장소 루트의 `dist/` 에 놓인다. `npm start` 는 그걸 API 와 함께 서빙한다.
+
 > **Node 22.18 이상**이 필요하다. `.ts` 파일을 빌드 없이 그대로 실행하는 타입 스트리핑과
 > 내장 `node:sqlite` 를 쓰기 때문이다. `package.json` 의 `engines` 로 버전을 못 박지는
 > 않았는데, 배포 환경이 더 높은 Node 를 쓸 때 거절당하기 때문이다.
@@ -116,7 +118,7 @@ Turso 클라이언트는 순수 JS(`@libsql/client/web`)를 쓴다.
 | 명령 | 하는 일 |
 |------|---------|
 | `npm run dev` | 서버(4000) + Vite 개발 서버(5173) 동시 실행. `/api` 는 프록시된다 |
-| `npm run build` | 웹을 `web/dist` 로 빌드 |
+| `npm run build` | 웹을 저장소 루트의 `dist/` 로 빌드 |
 | `npm start` | 빌드된 웹까지 한 프로세스로 서빙 (4000) |
 | `npm test` | 서버 통합 테스트 |
 | `npm run typecheck` | 웹 타입 검사 |

@@ -10,7 +10,8 @@ import { spaceRouter } from './routes/space.ts';
 import { todosRouter } from './routes/todos.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const webDist = resolve(here, '../../web/dist');
+/** 빌드 결과물은 저장소 루트의 dist/ 에 놓인다 (web/vite.config.ts 참고) */
+const webDist = resolve(here, '../../dist');
 
 /**
  * `serveWeb` 는 한 프로세스로 웹까지 서빙할 때만 켠다.
