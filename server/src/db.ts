@@ -135,9 +135,78 @@ function splitStatements(sql: string): string[] {
   return out;
 }
 
-export const db: Db = await (tursoUrl ? createTursoDb(tursoUrl) : createLocalDb());
-
 export const backend = tursoUrl ? 'turso' : 'local';
+
+/**
+ * 연결과 마이그레이션은 **첫 요청 때** 한 번만 한다.
+ *
+ * 예전에는 모듈을 읽는 순간에 했는데, 그러면 설정이 틀렸을 때 함수 자체가 죽어서
+ * 브라우저에는 원인을 알 수 없는 500 만 보였다. 지금은 실패해도 이유가 응답에 담긴다.
+ */
+let ready: Promise<Db> | null = null;
+
+/** 화면에 그대로 보여줘도 되는(= 비밀이 없는) 설정 오류. */
+function configError(message: string): Error {
+  return Object.assign(new Error(message), { expose: true });
+}
+
+async function connect(): Promise<Db> {
+  if (tursoUrl) {
+    if (!process.env.TURSO_AUTH_TOKEN) {
+      throw configError('TURSO_DATABASE_URL 은 있는데 TURSO_AUTH_TOKEN 이 없습니다.');
+    }
+    if (!/^(libsql|https?|wss?):\/\//.test(tursoUrl)) {
+      throw configError(
+        `TURSO_DATABASE_URL 형식이 이상합니다. libsql:// 로 시작해야 합니다 (지금: "${tursoUrl.slice(0, 16)}…").`,
+      );
+    }
+    return createTursoDb(tursoUrl);
+  }
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    throw configError(
+      'TURSO_DATABASE_URL 이 설정되지 않았습니다. ' +
+        '서버리스에서는 파일에 저장할 수 없어 데이터가 남지 않습니다. ' +
+        '환경변수 TURSO_DATABASE_URL 과 TURSO_AUTH_TOKEN 을 Production 에 등록하고 다시 배포하세요.',
+    );
+  }
+  return createLocalDb();
+}
+
+function getDb(): Promise<Db> {
+  if (!ready) {
+    ready = connect()
+      .then(async (instance) => {
+        await runMigrations(instance);
+        return instance;
+      })
+      .catch((err) => {
+        ready = null; // 다음 요청에서 다시 시도할 수 있게 한다
+        if ((err as { expose?: boolean }).expose) throw err;
+        // 연결·마이그레이션 실패(토큰 만료, 주소 오타 등)도 이유를 보여준다.
+        throw configError(`데이터베이스에 연결하지 못했습니다 — ${(err as Error).message}`);
+      });
+  }
+  return ready;
+}
+
+/** 어디서든 `db.get(...)` 처럼 쓰면 필요한 시점에 연결된다. */
+export const db: Db = {
+  async all(sql, params) {
+    return (await getDb()).all(sql, params);
+  },
+  async get(sql, params) {
+    return (await getDb()).get(sql, params);
+  },
+  async run(sql, params) {
+    return (await getDb()).run(sql, params);
+  },
+  async batch(statements) {
+    return (await getDb()).batch(statements);
+  },
+  async exec(sql) {
+    return (await getDb()).exec(sql);
+  },
+};
 
 // ---------------------------------------------------------------- 마이그레이션
 
@@ -212,14 +281,12 @@ const MIGRATIONS: string[] = [
   `,
 ];
 
-export async function migrate(): Promise<void> {
-  const row = await db.get<{ user_version: number }>('PRAGMA user_version');
+async function runMigrations(instance: Db): Promise<void> {
+  const row = await instance.get<{ user_version: number }>('PRAGMA user_version');
   const version = row?.user_version ?? 0;
 
   for (let i = version; i < MIGRATIONS.length; i++) {
-    await db.exec(MIGRATIONS[i]!);
-    await db.exec(`PRAGMA user_version = ${i + 1}`);
+    await instance.exec(MIGRATIONS[i]!);
+    await instance.exec(`PRAGMA user_version = ${i + 1}`);
   }
 }
-
-await migrate();

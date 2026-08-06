@@ -18,12 +18,40 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   });
 
   const text = await res.text();
-  const payload = text ? JSON.parse(text) : null;
+
+  // 서버가 죽으면 JSON 이 아니라 호스팅 업체의 HTML 오류 페이지가 온다.
+  // 그대로 JSON.parse 하면 "Unexpected token '<'" 같은 엉뚱한 말이 화면에 뜨므로,
+  // 파싱 실패는 실패대로 두고 아래에서 읽을 수 있는 문장으로 바꾼다.
+  let payload: any = null;
+  let parsed = false;
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+      parsed = true;
+    } catch {
+      parsed = false;
+    }
+  } else {
+    parsed = true;
+  }
 
   if (!res.ok) {
-    throw new ApiError(res.status, payload?.error ?? '요청을 처리하지 못했습니다.');
+    throw new ApiError(res.status, parsed ? (payload?.error ?? '요청을 처리하지 못했습니다.') : describe(res.status, text));
+  }
+  if (!parsed) {
+    throw new ApiError(res.status, describe(res.status, text));
   }
   return payload as T;
+}
+
+/** JSON 이 아닌 응답을 사람이 읽을 수 있는 한 줄로. */
+function describe(status: number, text: string): string {
+  const plain = text
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160);
+  return `서버 오류 (${status})${plain ? ` — ${plain}` : ''}`;
 }
 
 export const api = {

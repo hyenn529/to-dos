@@ -98,8 +98,60 @@ function splitStatements(sql) {
   if (current.trim()) out.push(current.trim());
   return out;
 }
-var db = await (tursoUrl ? createTursoDb(tursoUrl) : createLocalDb());
 var backend = tursoUrl ? "turso" : "local";
+var ready = null;
+function configError(message) {
+  return Object.assign(new Error(message), { expose: true });
+}
+async function connect() {
+  if (tursoUrl) {
+    if (!process.env.TURSO_AUTH_TOKEN) {
+      throw configError("TURSO_DATABASE_URL \uC740 \uC788\uB294\uB370 TURSO_AUTH_TOKEN \uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");
+    }
+    if (!/^(libsql|https?|wss?):\/\//.test(tursoUrl)) {
+      throw configError(
+        `TURSO_DATABASE_URL \uD615\uC2DD\uC774 \uC774\uC0C1\uD569\uB2C8\uB2E4. libsql:// \uB85C \uC2DC\uC791\uD574\uC57C \uD569\uB2C8\uB2E4 (\uC9C0\uAE08: "${tursoUrl.slice(0, 16)}\u2026").`
+      );
+    }
+    return createTursoDb(tursoUrl);
+  }
+  if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+    throw configError(
+      "TURSO_DATABASE_URL \uC774 \uC124\uC815\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4. \uC11C\uBC84\uB9AC\uC2A4\uC5D0\uC11C\uB294 \uD30C\uC77C\uC5D0 \uC800\uC7A5\uD560 \uC218 \uC5C6\uC5B4 \uB370\uC774\uD130\uAC00 \uB0A8\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. \uD658\uACBD\uBCC0\uC218 TURSO_DATABASE_URL \uACFC TURSO_AUTH_TOKEN \uC744 Production \uC5D0 \uB4F1\uB85D\uD558\uACE0 \uB2E4\uC2DC \uBC30\uD3EC\uD558\uC138\uC694."
+    );
+  }
+  return createLocalDb();
+}
+function getDb() {
+  if (!ready) {
+    ready = connect().then(async (instance) => {
+      await runMigrations(instance);
+      return instance;
+    }).catch((err) => {
+      ready = null;
+      if (err.expose) throw err;
+      throw configError(`\uB370\uC774\uD130\uBCA0\uC774\uC2A4\uC5D0 \uC5F0\uACB0\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4 \u2014 ${err.message}`);
+    });
+  }
+  return ready;
+}
+var db = {
+  async all(sql, params) {
+    return (await getDb()).all(sql, params);
+  },
+  async get(sql, params) {
+    return (await getDb()).get(sql, params);
+  },
+  async run(sql, params) {
+    return (await getDb()).run(sql, params);
+  },
+  async batch(statements) {
+    return (await getDb()).batch(statements);
+  },
+  async exec(sql) {
+    return (await getDb()).exec(sql);
+  }
+};
 var MIGRATIONS = [
   // 1 — 최초 스키마
   `
@@ -165,15 +217,14 @@ var MIGRATIONS = [
   ALTER TABLE spaces ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
   `
 ];
-async function migrate() {
-  const row = await db.get("PRAGMA user_version");
+async function runMigrations(instance) {
+  const row = await instance.get("PRAGMA user_version");
   const version = row?.user_version ?? 0;
   for (let i = version; i < MIGRATIONS.length; i++) {
-    await db.exec(MIGRATIONS[i]);
-    await db.exec(`PRAGMA user_version = ${i + 1}`);
+    await instance.exec(MIGRATIONS[i]);
+    await instance.exec(`PRAGMA user_version = ${i + 1}`);
   }
 }
-await migrate();
 
 // server/src/routes/auth.ts
 import { Router } from "express";
@@ -1038,7 +1089,8 @@ function createApp({ serveWeb = true } = {}) {
   });
   app2.use((err, _req, res, _next) => {
     console.error("[haru]", err);
-    res.status(500).json({ error: "\uC11C\uBC84\uC5D0\uC11C \uBB38\uC81C\uAC00 \uC0DD\uACBC\uC2B5\uB2C8\uB2E4." });
+    const exposed = err.expose === true;
+    res.status(500).json({ error: exposed ? err.message : "\uC11C\uBC84\uC5D0\uC11C \uBB38\uC81C\uAC00 \uC0DD\uACBC\uC2B5\uB2C8\uB2E4." });
   });
   return app2;
 }

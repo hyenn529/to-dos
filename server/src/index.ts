@@ -60,7 +60,10 @@ export function createApp({ serveWeb = true } = {}) {
 
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     console.error('[haru]', err);
-    res.status(500).json({ error: '서버에서 문제가 생겼습니다.' });
+    // 설정 문제(환경변수 누락, DB 연결 실패)는 이유를 그대로 보여준다.
+    // 알려주지 않으면 배포한 사람이 로그를 뒤지는 수밖에 없다.
+    const exposed = (err as { expose?: boolean }).expose === true;
+    res.status(500).json({ error: exposed ? err.message : '서버에서 문제가 생겼습니다.' });
   });
 
   return app;
