@@ -13,11 +13,11 @@
   ],
   "scripts": {
     "dev": "npm-run-all --parallel dev:server dev:web",
-    "dev:server": "npm run dev --workspace server",
-    "dev:web": "npm run dev --workspace web",
-    "build": "npm run build --workspace web",
-    "start": "npm run start --workspace server",
-    "test": "npm test --workspace server",
+    "dev:server": "npm run dev --workspace @haru/server",
+    "dev:web": "npm run dev --workspace @haru/web",
+    "build": "npm run build --workspace @haru/web",
+    "start": "npm run start --workspace @haru/server",
+    "test": "npm test --workspace @haru/server",
     "typecheck": "npm run typecheck --workspace @haru/web"
   },
   "devDependencies": {

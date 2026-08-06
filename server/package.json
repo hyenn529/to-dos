@@ -5,6 +5,8 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
+    "//build": "서버는 빌드 단계가 없다(타입 스트리핑으로 .ts 를 그대로 실행). 배포 환경이 모든 워크스페이스에 build 를 돌려도 죽지 않도록 빈 스크립트를 둔다.",
+    "build": "node -e \"console.log('[haru] server: 빌드 단계 없음')\"",
     "dev": "node --watch --disable-warning=ExperimentalWarning src/index.ts",
     "start": "node --disable-warning=ExperimentalWarning src/index.ts",
     "test": "node --disable-warning=ExperimentalWarning --test test/*.test.ts"
