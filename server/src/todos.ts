@@ -31,27 +31,27 @@ type SubtaskRow = {
 /**
  * 보는 사람 기준으로 어느 칸에 놓일지 계산한다.
  *
- * 업무는 **소유자 본인에게만** 보인다. 상대의 업무는 아예 내려주지 않으므로
- * 여기서 null 을 돌려주면 호출부가 목록에서 걸러낸다.
+ * 두 축이 만나 네 칸이 된다 — 누구 것인가(나/상대) × 어떤 일인가(개인/업무).
+ * 상대의 업무도 보이지만, 볼 수만 있고 체크하거나 고치지는 못한다.
  */
-export function bucketFor(row: TodoRow, viewerId: number): Bucket | null {
-  if (row.lane === 'work') return row.owner_id === viewerId ? 'work' : null;
-  return row.owner_id === viewerId ? 'mine' : 'partner';
+export function bucketFor(row: TodoRow, viewerId: number): Bucket {
+  const isMine = row.owner_id === viewerId;
+  if (row.lane === 'work') return isMine ? 'mineWork' : 'partnerWork';
+  return isMine ? 'mine' : 'partner';
 }
 
-function subtasksFor(todoIds: number[]): Map<number, Subtask[]> {
+async function subtasksFor(todoIds: number[]): Promise<Map<number, Subtask[]>> {
   const out = new Map<number, Subtask[]>();
   if (todoIds.length === 0) return out;
 
   const placeholders = todoIds.map(() => '?').join(',');
-  const rows = db
-    .prepare(
-      `SELECT id, todo_id, title, done, position
-         FROM subtasks
-        WHERE todo_id IN (${placeholders})
-        ORDER BY position, id`,
-    )
-    .all(...todoIds) as SubtaskRow[];
+  const rows = await db.all<SubtaskRow>(
+    `SELECT id, todo_id, title, done, position
+       FROM subtasks
+      WHERE todo_id IN (${placeholders})
+      ORDER BY position, id`,
+    todoIds,
+  );
 
   for (const row of rows) {
     const list = out.get(row.todo_id) ?? [];
@@ -67,10 +67,8 @@ function subtasksFor(todoIds: number[]): Map<number, Subtask[]> {
   return out;
 }
 
-function toTodo(row: TodoRow, viewerId: number, subtasks: Subtask[]): Todo | null {
+function toTodo(row: TodoRow, viewerId: number, subtasks: Subtask[]): Todo {
   const bucket = bucketFor(row, viewerId);
-  if (bucket === null) return null;
-
   const isOwner = row.owner_id === viewerId;
   const together = row.together === 1;
 
@@ -102,14 +100,9 @@ function toTodo(row: TodoRow, viewerId: number, subtasks: Subtask[]): Todo | nul
   };
 }
 
-function hydrate(rows: TodoRow[], viewerId: number): Todo[] {
-  const subtaskMap = subtasksFor(rows.map((r) => r.id));
-  const out: Todo[] = [];
-  for (const row of rows) {
-    const todo = toTodo(row, viewerId, subtaskMap.get(row.id) ?? []);
-    if (todo) out.push(todo);
-  }
-  return out;
+async function hydrate(rows: TodoRow[], viewerId: number): Promise<Todo[]> {
+  const subtaskMap = await subtasksFor(rows.map((r) => r.id));
+  return rows.map((row) => toTodo(row, viewerId, subtaskMap.get(row.id) ?? []));
 }
 
 const SELECT_TODO = `
@@ -118,70 +111,79 @@ const SELECT_TODO = `
     FROM todos`;
 
 /** 날짜 구간의 할 일. from/to 는 'YYYY-MM-DD', 양끝 포함. */
-export function listByRange(
+export async function listByRange(
   spaceId: number,
   viewerId: number,
   from: string,
   to: string,
-): Todo[] {
-  const rows = db
-    .prepare(
-      `${SELECT_TODO}
-        WHERE space_id = ?
-          AND date IS NOT NULL
-          AND date <= ?
-          AND COALESCE(end_date, date) >= ?
-        ORDER BY position, id`,
-    )
-    .all(spaceId, to, from) as TodoRow[];
+): Promise<Todo[]> {
+  const rows = await db.all<TodoRow>(
+    `${SELECT_TODO}
+      WHERE space_id = ?
+        AND date IS NOT NULL
+        AND date <= ?
+        AND COALESCE(end_date, date) >= ?
+      ORDER BY position, id`,
+    [spaceId, to, from],
+  );
   return hydrate(rows, viewerId);
 }
 
 /** 날짜가 없는 "언젠가" 서랍. */
-export function listSomeday(spaceId: number, viewerId: number): Todo[] {
-  const rows = db
-    .prepare(`${SELECT_TODO} WHERE space_id = ? AND date IS NULL ORDER BY position, id`)
-    .all(spaceId) as TodoRow[];
+export async function listSomeday(spaceId: number, viewerId: number): Promise<Todo[]> {
+  const rows = await db.all<TodoRow>(
+    `${SELECT_TODO} WHERE space_id = ? AND date IS NULL ORDER BY position, id`,
+    [spaceId],
+  );
   return hydrate(rows, viewerId);
 }
 
-export function getById(id: number): TodoRow | null {
-  const row = db.prepare(`${SELECT_TODO} WHERE id = ?`).get(id) as TodoRow | undefined;
+export async function getById(id: number): Promise<TodoRow | null> {
+  const row = await db.get<TodoRow>(`${SELECT_TODO} WHERE id = ?`, [id]);
   return row ?? null;
 }
 
-export function getForViewer(id: number, viewerId: number): Todo | null {
-  const row = getById(id);
+export async function getForViewer(id: number, viewerId: number): Promise<Todo | null> {
+  const row = await getById(id);
   if (!row) return null;
-  return toTodo(row, viewerId, subtasksFor([id]).get(id) ?? []);
+  const subtasks = (await subtasksFor([id])).get(id) ?? [];
+  return toTodo(row, viewerId, subtasks);
 }
 
 /**
  * 달력에 그릴 한 달치 밀도.
  * 여러 날에 걸친 항목은 걸쳐 있는 모든 날에 1씩 센다.
  */
-export function monthLoad(
+export async function monthLoad(
   spaceId: number,
   viewerId: number,
   from: string,
   to: string,
-): DayLoad[] {
-  const rows = db
-    .prepare(
-      `${SELECT_TODO}
-        WHERE space_id = ?
-          AND date IS NOT NULL
-          AND date <= ?
-          AND COALESCE(end_date, date) >= ?`,
-    )
-    .all(spaceId, to, from) as TodoRow[];
+): Promise<DayLoad[]> {
+  const rows = await db.all<TodoRow>(
+    `${SELECT_TODO}
+      WHERE space_id = ?
+        AND date IS NOT NULL
+        AND date <= ?
+        AND COALESCE(end_date, date) >= ?`,
+    [spaceId, to, from],
+  );
 
   const byDate = new Map<string, DayLoad & { total: number; doneCount: number }>();
 
   const touch = (date: string) => {
     let entry = byDate.get(date);
     if (!entry) {
-      entry = { date, mine: 0, partner: 0, work: 0, allDone: false, total: 0, doneCount: 0 };
+      entry = {
+        date,
+        mine: 0,
+        mineWork: 0,
+        partner: 0,
+        partnerWork: 0,
+        allDone: false,
+        total: 0,
+        doneCount: 0,
+      };
       byDate.set(date, entry);
     }
     return entry;
@@ -189,7 +191,6 @@ export function monthLoad(
 
   for (const row of rows) {
     const bucket = bucketFor(row, viewerId);
-    if (bucket === null) continue;
 
     for (const date of eachDate(row.date!, row.end_date, from, to)) {
       const entry = touch(date);
@@ -246,15 +247,13 @@ export type CreateInput = {
   together?: boolean;
 };
 
-export function create(input: CreateInput): number {
-  const position = nextPosition(input.spaceId, input.date ?? null);
-  const result = db
-    .prepare(
-      `INSERT INTO todos (space_id, owner_id, lane, title, note, date, end_date,
-                          position, together)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
+export async function create(input: CreateInput): Promise<number> {
+  const position = await nextPosition(input.spaceId, input.date ?? null);
+  const result = await db.run(
+    `INSERT INTO todos (space_id, owner_id, lane, title, note, date, end_date,
+                        position, together)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
       input.spaceId,
       input.ownerId,
       input.lane,
@@ -264,19 +263,19 @@ export function create(input: CreateInput): number {
       input.endDate ?? null,
       position,
       input.together ? 1 : 0,
-    );
-  return Number(result.lastInsertRowid);
+    ],
+  );
+  return result.lastInsertRowid;
 }
 
-function nextPosition(spaceId: number, date: string | null): number {
-  const row = db
-    .prepare(
-      date === null
-        ? 'SELECT MAX(position) AS maxPos FROM todos WHERE space_id = ? AND date IS NULL'
-        : 'SELECT MAX(position) AS maxPos FROM todos WHERE space_id = ? AND date = ?',
-    )
-    .get(...(date === null ? [spaceId] : [spaceId, date])) as { maxPos: number | null };
-  return (row.maxPos ?? 0) + 1;
+async function nextPosition(spaceId: number, date: string | null): Promise<number> {
+  const row = await db.get<{ maxPos: number | null }>(
+    date === null
+      ? 'SELECT MAX(position) AS maxPos FROM todos WHERE space_id = ? AND date IS NULL'
+      : 'SELECT MAX(position) AS maxPos FROM todos WHERE space_id = ? AND date = ?',
+    date === null ? [spaceId] : [spaceId, date],
+  );
+  return (row?.maxPos ?? 0) + 1;
 }
 
 export type PatchInput = {
@@ -287,7 +286,7 @@ export type PatchInput = {
   together?: boolean;
 };
 
-export function patch(id: number, input: PatchInput): void {
+export async function patch(id: number, input: PatchInput): Promise<void> {
   const sets: string[] = [];
   const values: (string | number | null)[] = [];
 
@@ -315,89 +314,94 @@ export function patch(id: number, input: PatchInput): void {
 
   sets.push("updated_at = datetime('now')");
   values.push(id);
-  db.prepare(`UPDATE todos SET ${sets.join(', ')} WHERE id = ?`).run(...values);
+  await db.run(`UPDATE todos SET ${sets.join(', ')} WHERE id = ?`, values);
 }
 
-export function setDone(id: number, done: boolean, byUserId: number): void {
-  db.prepare(
+export async function setDone(id: number, done: boolean, byUserId: number): Promise<void> {
+  await db.run(
     `UPDATE todos
         SET done = ?, done_at = ?, done_by = ?, updated_at = datetime('now')
       WHERE id = ?`,
-  ).run(done ? 1 : 0, done ? new Date().toISOString() : null, done ? byUserId : null, id);
+    [done ? 1 : 0, done ? new Date().toISOString() : null, done ? byUserId : null, id],
+  );
 }
 
-export function remove(id: number): void {
-  db.prepare('DELETE FROM todos WHERE id = ?').run(id);
+export async function remove(id: number): Promise<void> {
+  await db.run('DELETE FROM todos WHERE id = ?', [id]);
 }
 
 /** 같은 날 안에서의 순서를 통째로 다시 매긴다. */
-export function reorder(spaceId: number, orderedIds: number[]): void {
-  const stmt = db.prepare('UPDATE todos SET position = ? WHERE id = ? AND space_id = ?');
-  db.exec('BEGIN');
-  try {
-    orderedIds.forEach((id, index) => stmt.run(index + 1, id, spaceId));
-    db.exec('COMMIT');
-  } catch (err) {
-    db.exec('ROLLBACK');
-    throw err;
-  }
+export async function reorder(spaceId: number, orderedIds: number[]): Promise<void> {
+  await db.batch(
+    orderedIds.map((id, index) => ({
+      sql: 'UPDATE todos SET position = ? WHERE id = ? AND space_id = ?',
+      params: [index + 1, id, spaceId],
+    })),
+  );
 }
 
 /**
  * 어제까지 못 끝낸 내 항목을 오늘로 옮긴다.
  * 상대 갈래는 건드리지 않고, 원래 날짜를 carried_from 에 남겨 "어제에서" 배지를 띄운다.
  */
-export function carryForward(spaceId: number, ownerId: number, today: string): number {
-  const rows = db
-    .prepare(
-      `SELECT id, date FROM todos
-        WHERE space_id = ? AND owner_id = ? AND done = 0
-          AND date IS NOT NULL AND COALESCE(end_date, date) < ?`,
-    )
-    .all(spaceId, ownerId, today) as { id: number; date: string }[];
-
-  const stmt = db.prepare(
-    `UPDATE todos
-        SET date = ?, carried_from = COALESCE(carried_from, ?), updated_at = datetime('now')
-      WHERE id = ?`,
+export async function carryForward(
+  spaceId: number,
+  ownerId: number,
+  today: string,
+): Promise<number> {
+  const rows = await db.all<{ id: number; date: string }>(
+    `SELECT id, date FROM todos
+      WHERE space_id = ? AND owner_id = ? AND done = 0
+        AND date IS NOT NULL AND COALESCE(end_date, date) < ?`,
+    [spaceId, ownerId, today],
   );
+  if (rows.length === 0) return 0;
 
-  db.exec('BEGIN');
-  try {
-    for (const row of rows) stmt.run(today, row.date, row.id);
-    db.exec('COMMIT');
-  } catch (err) {
-    db.exec('ROLLBACK');
-    throw err;
-  }
+  await db.batch(
+    rows.map((row) => ({
+      sql: `UPDATE todos
+               SET date = ?, carried_from = COALESCE(carried_from, ?),
+                   updated_at = datetime('now')
+             WHERE id = ?`,
+      params: [today, row.date, row.id],
+    })),
+  );
   return rows.length;
 }
 
 /** 오늘 이전에 남아 있는 내 항목 수 — "어제 못 한 일이 n개 있어요" 줄에 쓴다. */
-export function countOverdue(spaceId: number, ownerId: number, today: string): number {
-  const row = db
-    .prepare(
-      `SELECT COUNT(*) AS n FROM todos
-        WHERE space_id = ? AND owner_id = ? AND done = 0
-          AND date IS NOT NULL AND COALESCE(end_date, date) < ?`,
-    )
-    .get(spaceId, ownerId, today) as { n: number };
-  return row.n;
+export async function countOverdue(
+  spaceId: number,
+  ownerId: number,
+  today: string,
+): Promise<number> {
+  const row = await db.get<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM todos
+      WHERE space_id = ? AND owner_id = ? AND done = 0
+        AND date IS NOT NULL AND COALESCE(end_date, date) < ?`,
+    [spaceId, ownerId, today],
+  );
+  return row?.n ?? 0;
 }
 
 // ---------------------------------------------------------------- 하위 체크
 
-export function addSubtask(todoId: number, title: string): number {
-  const row = db
-    .prepare('SELECT MAX(position) AS maxPos FROM subtasks WHERE todo_id = ?')
-    .get(todoId) as { maxPos: number | null };
-  const result = db
-    .prepare('INSERT INTO subtasks (todo_id, title, position) VALUES (?, ?, ?)')
-    .run(todoId, title, (row.maxPos ?? 0) + 1);
-  return Number(result.lastInsertRowid);
+export async function addSubtask(todoId: number, title: string): Promise<number> {
+  const row = await db.get<{ maxPos: number | null }>(
+    'SELECT MAX(position) AS maxPos FROM subtasks WHERE todo_id = ?',
+    [todoId],
+  );
+  const result = await db.run(
+    'INSERT INTO subtasks (todo_id, title, position) VALUES (?, ?, ?)',
+    [todoId, title, (row?.maxPos ?? 0) + 1],
+  );
+  return result.lastInsertRowid;
 }
 
-export function patchSubtask(id: number, input: { title?: string; done?: boolean }): void {
+export async function patchSubtask(
+  id: number,
+  input: { title?: string; done?: boolean },
+): Promise<void> {
   const sets: string[] = [];
   const values: (string | number)[] = [];
   if (input.title !== undefined) {
@@ -410,16 +414,14 @@ export function patchSubtask(id: number, input: { title?: string; done?: boolean
   }
   if (sets.length === 0) return;
   values.push(id);
-  db.prepare(`UPDATE subtasks SET ${sets.join(', ')} WHERE id = ?`).run(...values);
+  await db.run(`UPDATE subtasks SET ${sets.join(', ')} WHERE id = ?`, values);
 }
 
-export function removeSubtask(id: number): void {
-  db.prepare('DELETE FROM subtasks WHERE id = ?').run(id);
+export async function removeSubtask(id: number): Promise<void> {
+  await db.run('DELETE FROM subtasks WHERE id = ?', [id]);
 }
 
-export function findSubtaskParent(id: number): number | null {
-  const row = db.prepare('SELECT todo_id FROM subtasks WHERE id = ?').get(id) as
-    | { todo_id: number }
-    | undefined;
+export async function findSubtaskParent(id: number): Promise<number | null> {
+  const row = await db.get<{ todo_id: number }>('SELECT todo_id FROM subtasks WHERE id = ?', [id]);
   return row?.todo_id ?? null;
 }

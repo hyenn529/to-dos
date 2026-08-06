@@ -4,7 +4,14 @@ import type { AddressInfo } from 'node:net';
 process.env.HARU_DB_PATH ??= ':memory:';
 process.env.HARU_SECRET ??= 'test-secret-must-be-long-enough';
 
-const { createApp } = await import('../src/index.ts');
+/*
+ * 앱을 여기서 import 하면 안 된다.
+ *
+ * db 모듈은 첫 import 때 환경변수를 보고 백엔드(로컬 / Turso)를 정한다.
+ * 이 파일이 모듈 최상단에서 앱을 불러오면, Turso 테스트가 환경변수를 세우기도 전에
+ * 로컬 백엔드로 굳어 버린다 — 그러면 Turso 를 테스트한다고 믿으면서 실제로는
+ * 로컬 SQLite 를 테스트하게 된다. 그래서 startServer() 안에서 늦게 불러온다.
+ */
 
 export type Client = {
   base: string;
@@ -13,7 +20,8 @@ export type Client = {
 };
 
 export async function startServer(): Promise<{ base: string; close(): Promise<void> }> {
-  const server: Server = createApp().listen(0);
+  const { createApp } = await import('../src/index.ts');
+  const server: Server = createApp({ serveWeb: false }).listen(0);
   await new Promise((done) => server.once('listening', done));
   const { port } = server.address() as AddressInfo;
   return {

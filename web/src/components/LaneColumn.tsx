@@ -19,12 +19,14 @@ export function LaneColumn({
   todos: Todo[];
   date: string | null;
 }) {
-  const { bucketName, refresh, notify } = useStore();
+  const { refresh, notify } = useStore();
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [showDone, setShowDone] = useState(false);
 
-  const editable = bucket !== 'partner';
+  // 사람 이름은 위쪽 그룹 머리글이 이미 보여준다. 여기서는 개인/업무만 적는다.
+  const label = bucket.endsWith('Work') ? '업무' : '개인';
+  const editable = bucket === 'mine' || bucket === 'mineWork';
   const open = todos.filter((todo) => !todo.done);
   const closed = todos.filter((todo) => todo.done);
 
@@ -36,7 +38,7 @@ export function LaneColumn({
     try {
       await api.create({
         title,
-        lane: bucket === 'work' ? 'work' : 'personal',
+        lane: bucket.endsWith('Work') ? 'work' : 'personal',
         date,
       });
       setDraft('');
@@ -52,18 +54,14 @@ export function LaneColumn({
     <section className="lane" data-bucket={bucket}>
       <header className="lane__head">
         <i className="lane__mark" />
-        <h2 className="lane__name">{bucketName(bucket)}</h2>
-        {bucket === 'partner' ? <span className="lane__tag">보기만</span> : null}
-        {bucket === 'work' ? <span className="lane__tag">나만 보임</span> : null}
+        <h3 className="lane__name">{label}</h3>
         <span className="lane__count">
           {editable ? `${open.length} 남음` : `${todos.length} 건`}
         </span>
       </header>
 
       {open.length === 0 && closed.length === 0 ? (
-        <p className="lane__empty">
-          {editable ? '비어 있어요.' : `${bucketName(bucket)} 님 일정이 없어요.`}
-        </p>
+        <p className="lane__empty">비어 있어요.</p>
       ) : null}
 
       <ul className="lane__list">
@@ -92,8 +90,8 @@ export function LaneColumn({
           <input
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder={`＋ ${bucketName(bucket)} 할 일`}
-            aria-label={`${bucketName(bucket)} 갈래에 할 일 추가`}
+            placeholder={`＋ ${label} 할 일`}
+            aria-label={`${label} 갈래에 할 일 추가`}
             disabled={busy}
           />
         </form>

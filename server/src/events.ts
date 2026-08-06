@@ -1,26 +1,15 @@
-import type { Response } from 'express';
+import { db } from './db.ts';
 
 /**
- * 아주 작은 SSE 허브.
+ * 변경 감지.
  *
- * 둘이 쓰는 앱이라 연결 수가 손에 꼽히므로 메모리에 들고 있어도 충분하다.
- * 한쪽이 무언가 바꾸면 같은 공간의 다른 연결에 "다시 불러와" 신호만 보낸다 —
- * 변경 내용을 실어 보내지 않으므로 권한 계산이 새어 나갈 일이 없다.
+ * 예전에는 연결을 열어두고 밀어주는 방식(SSE)이었는데, 서버리스에서는 프로세스가
+ * 요청 사이에 살아 있지 않아 연결을 유지할 수 없다. 그래서 **공간마다 숫자 하나**를 두고
+ * 쓰기가 일어날 때마다 올린다. 화면은 이 숫자만 물어보고, 바뀌었을 때만 전체를 다시 부른다.
+ *
+ * 응답이 `{"version":37}` 한 줄이라 자주 물어봐도 부담이 없고,
+ * 변경 내용을 실어 보내지 않으므로 남에게 보이면 안 되는 항목이 새어 나갈 길도 없다.
  */
-
-type Client = {
-  spaceId: number;
-  userId: number;
-  res: Response;
-};
-
-const clients = new Set<Client>();
-
-export function addClient(spaceId: number, userId: number, res: Response): () => void {
-  const client: Client = { spaceId, userId, res };
-  clients.add(client);
-  return () => clients.delete(client);
-}
 
 export type ChangeReason =
   | 'todo:created'
@@ -30,38 +19,14 @@ export type ChangeReason =
   | 'todo:reordered'
   | 'space:joined';
 
-/**
- * 같은 공간의 모든 연결에 알린다.
- * @param exceptUserId 변경을 일으킨 본인. 이미 응답으로 최신 상태를 받았으므로 건너뛴다.
- */
-export function broadcast(
-  spaceId: number,
-  reason: ChangeReason,
-  exceptUserId?: number,
-): void {
-  const payload = JSON.stringify({ reason, at: Date.now() });
-  for (const client of clients) {
-    if (client.spaceId !== spaceId) continue;
-    if (exceptUserId !== undefined && client.userId === exceptUserId) continue;
-    try {
-      client.res.write(`event: change\ndata: ${payload}\n\n`);
-    } catch {
-      clients.delete(client);
-    }
-  }
+/** 공간의 변경 번호를 1 올린다. 쓰기를 하는 모든 곳에서 부른다. */
+export async function bumpVersion(spaceId: number, _reason: ChangeReason): Promise<void> {
+  await db.run('UPDATE spaces SET version = version + 1 WHERE id = ?', [spaceId]);
 }
 
-/** 프록시가 유휴 연결을 끊지 않도록 주기적으로 주석 줄을 보낸다. */
-export function startHeartbeat(intervalMs = 25_000): NodeJS.Timeout {
-  const timer = setInterval(() => {
-    for (const client of clients) {
-      try {
-        client.res.write(': ping\n\n');
-      } catch {
-        clients.delete(client);
-      }
-    }
-  }, intervalMs);
-  timer.unref();
-  return timer;
+export async function readVersion(spaceId: number): Promise<number> {
+  const row = await db.get<{ version: number }>('SELECT version FROM spaces WHERE id = ?', [
+    spaceId,
+  ]);
+  return row?.version ?? 0;
 }

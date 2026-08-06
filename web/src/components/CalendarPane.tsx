@@ -4,7 +4,9 @@ import type { Bucket, DayLoad } from '../lib/types.ts';
 import { AvatarPair } from './Avatar.tsx';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
-const BAR_ORDER: Bucket[] = ['mine', 'partner', 'work'];
+
+/** 막대 순서는 어디서나 고정 — 내 개인·업무 먼저, 그다음 상대. */
+const BAR_ORDER: Bucket[] = ['mine', 'mineWork', 'partner', 'partnerWork'];
 
 /** 개수를 세 단계 길이로 줄인다. 정확한 수는 눌러서 보면 된다. */
 function step(count: number): 0 | 1 | 2 | 3 {
@@ -134,12 +136,14 @@ export function CalendarPane({
       ) : null}
 
       <section className="legend" aria-label="달력 읽는 법">
-        {BAR_ORDER.map((bucket) => (
-          <span key={bucket} className="legend__row">
-            <i className="legend__bar" data-bucket={bucket} />
-            {bucketName(bucket)}
-          </span>
-        ))}
+        {BAR_ORDER.filter((bucket) => me?.partner || !bucket.startsWith('partner')).map(
+          (bucket) => (
+            <span key={bucket} className="legend__row">
+              <i className="legend__bar" data-bucket={bucket} />
+              {bucketName(bucket)}
+            </span>
+          ),
+        )}
         <span className="legend__row">
           <i className="legend__bar legend__bar--grey" />
           다 끝냈거나 지나간 날

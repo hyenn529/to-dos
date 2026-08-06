@@ -186,13 +186,14 @@ ul {
   flex-direction: column;
   align-items: center;
   gap: 5px;
-  height: 56px;
+  height: 60px;
   padding: 7px 0 4px;
   border-radius: var(--r-md);
   transition: background 0.12s ease;
 }
 .cal__bars {
-  min-height: 12px;
+  /* 막대가 없는 날에도 자리를 잡아 둬야 격자가 흔들리지 않는다 (최대 4줄) */
+  min-height: 21px;
 }
 .cal__day:hover {
   background: color-mix(in srgb, var(--surface) 70%, transparent);
@@ -226,13 +227,17 @@ ul {
 .cal__bars {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2.5px;
   align-items: center;
 }
 .cal__bar {
   height: 3px;
   border-radius: 99px;
   background: var(--bucket);
+}
+.cal__bar[data-bucket$='Work'],
+.legend__bar[data-bucket$='Work'] {
+  border-radius: 1px;
 }
 .cal__bar--1 {
   width: 8px;
@@ -343,19 +348,26 @@ ul {
 .chips button[data-bucket].is-on {
   background: var(--bucket-ink);
 }
+.chips button[data-person].is-on {
+  background: var(--person-ink);
+}
 .chips--mobile {
   display: none;
   margin-left: 0;
 }
 
+/*
+ * 시스템 오류 알림 — "네가 늦었다"가 아니라 "연결이 끊겼다" 같은 것.
+ * 갈래 색과 겹치지 않는 전용 색을 쓴다. 할 일에는 절대 이 색이 붙지 않는다.
+ */
 .banner {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
   border-radius: var(--r-md);
-  background: var(--work-soft);
-  color: var(--work-ink);
+  background: var(--alert-soft);
+  color: var(--alert-ink);
   font-size: 13px;
 }
 .banner button {
@@ -406,55 +418,103 @@ ul {
   max-width: 60ch;
 }
 
-/* ==================================================== 갈래 칸 */
+/* ==================================================== 사람 그룹 + 갈래 칸 */
 
-.lanes {
+/*
+ * 두 단계로 나눈다. 바깥은 사람(나 / 상대), 안은 개인과 업무.
+ * 갈래 넷을 평평하게 늘어놓으면 매번 이름을 읽어야 하지만,
+ * 사람으로 묶으면 먼저 "내 칸"을 찾고 그 안을 훑게 된다.
+ */
+.people {
   display: grid;
-  gap: 16px;
+  gap: 22px;
   align-items: start;
 }
-.lanes[data-count='3'] {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.lanes[data-count='2'] {
+.people[data-count='2'] {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.lanes[data-count='1'] {
+.people[data-count='1'] {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.person__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--person);
+}
+.person__head h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--person-ink);
+}
+.person__mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--person);
+  flex: 0 0 auto;
+}
+.person__tag {
+  font-size: 10.5px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 99px;
+  padding: 2px 8px;
+}
+.person__lanes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
 }
 
 .lane {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   min-width: 0;
 }
 
 .lane__head {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding-bottom: 9px;
+  gap: 6px;
+  padding-bottom: 7px;
   border-bottom: 1.5px solid var(--line-soft);
 }
+/*
+ * 개인/업무는 색만으로 나누지 않는다.
+ *
+ * 사람 축이 이미 색상(보라/파랑)을 쓰고 있어서, 같은 사람 안의 개인·업무를 또 색으로만
+ * 가르면 "연한 보라"와 "진한 보라"를 매번 비교해야 한다. 그래서 **형태**를 하나 더 쓴다.
+ *
+ *   둥글다 = 개인 (사적인 것)
+ *   각지다 = 업무 (공적인 것)
+ *
+ * 색이 안 보여도, 흑백으로 인쇄해도 구분된다.
+ */
 .lane__mark {
   width: 9px;
   height: 9px;
-  border-radius: 3px;
+  border-radius: 50%;
   background: var(--bucket);
   flex: 0 0 auto;
 }
+[data-bucket$='Work'] .lane__mark {
+  border-radius: 2px;
+}
 .lane__name {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 650;
   color: var(--bucket-ink);
-}
-.lane__tag {
-  font-size: 10.5px;
-  color: var(--muted);
-  background: var(--surface-2);
-  border-radius: 99px;
-  padding: 2px 8px;
 }
 .lane__count {
   margin-left: auto;
@@ -571,7 +631,8 @@ ul {
   width: 17px;
   height: 17px;
   margin-top: 1px;
-  border-radius: 5px;
+  /* 개인은 둥글게, 업무는 각지게 — 아래 [data-bucket$='Work'] 참고 */
+  border-radius: 6px;
   flex: 0 0 auto;
   box-shadow: inset 0 0 0 1.5px var(--bucket);
   transition: background 0.12s ease;
@@ -596,7 +657,18 @@ ul {
 .check--sm {
   width: 13px;
   height: 13px;
-  border-radius: 4px;
+  border-radius: 5px;
+}
+
+/* 업무 갈래는 모서리를 세운다 */
+[data-bucket$='Work'] .check {
+  border-radius: 2px;
+}
+[data-bucket$='Work'] .check--sm {
+  border-radius: 2px;
+}
+[data-bucket$='Work'] .dot::after {
+  border-radius: 1px;
 }
 .check--sm.is-checked::after {
   font-size: 9px;
@@ -730,7 +802,7 @@ ul {
   flex-wrap: wrap;
 }
 .row__actions .is-danger {
-  color: var(--work-ink);
+  color: var(--alert-ink);
 }
 .row__actions button:disabled {
   opacity: 0.4;
@@ -887,8 +959,8 @@ ul {
   margin: 0;
   padding: 9px 12px;
   border-radius: var(--r-sm);
-  background: var(--work-soft);
-  color: var(--work-ink);
+  background: var(--alert-soft);
+  color: var(--alert-ink);
   font-size: 12.5px;
 }
 .auth__submit {
@@ -1053,13 +1125,10 @@ ul {
   }
 }
 
-/* 태블릿 — 업무는 아래로 내려 전체 폭을 쓴다 */
-@media (max-width: 900px) {
-  .lanes[data-count='3'] {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .lanes[data-count='3'] > .lane[data-bucket='work'] {
-    grid-column: 1 / -1;
+/* 태블릿 — 사람을 위아래로 쌓고, 개인·업무는 나란히 유지 */
+@media (max-width: 1000px) {
+  .people[data-count='2'] {
+    grid-template-columns: minmax(0, 1fr);
   }
   .week {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1103,7 +1172,7 @@ ul {
     font-size: 18px;
   }
   .cal__day {
-    height: 46px;
+    height: 54px;
     padding-top: 5px;
     gap: 4px;
   }
@@ -1146,14 +1215,14 @@ ul {
     display: flex;
   }
 
-  /* 좁은 화면에서는 한 줄 목록 + 갈래 칩 필터 */
-  .lanes,
-  .lanes[data-count='3'],
-  .lanes[data-count='2'] {
+  /* 좁은 화면 — 사람도 갈래도 한 줄씩. 위쪽 칩으로 사람을 걸러 본다 */
+  .people,
+  .people[data-count='2'] {
     grid-template-columns: minmax(0, 1fr);
   }
-  .lanes[data-count='3'] > .lane[data-bucket='work'] {
-    grid-column: auto;
+  .person__lanes {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
 
   .week {

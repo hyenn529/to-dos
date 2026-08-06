@@ -96,40 +96,41 @@ type UserRow = {
   initial: string;
 };
 
-export function findUserById(id: number): PublicUser | null {
-  const row = db
-    .prepare('SELECT id, email, name, initial FROM users WHERE id = ?')
-    .get(id) as UserRow | undefined;
+export async function findUserById(id: number): Promise<PublicUser | null> {
+  const row = await db.get<UserRow>('SELECT id, email, name, initial FROM users WHERE id = ?', [
+    id,
+  ]);
   return row ? { ...row } : null;
 }
 
 /** 사용자가 속한 공간. 한 사람은 공간 하나만 갖는다(둘이 쓰는 앱이므로). */
-export function findSpaceForUser(userId: number): Space | null {
-  const row = db
-    .prepare(
-      `SELECT s.id, s.name, s.invite_code AS inviteCode
-         FROM spaces s
-         JOIN memberships m ON m.space_id = s.id
-        WHERE m.user_id = ?
-        ORDER BY m.created_at
-        LIMIT 1`,
-    )
-    .get(userId) as Space | undefined;
+export async function findSpaceForUser(userId: number): Promise<Space | null> {
+  const row = await db.get<Space>(
+    `SELECT s.id, s.name, s.invite_code AS inviteCode
+       FROM spaces s
+       JOIN memberships m ON m.space_id = s.id
+      WHERE m.user_id = ?
+      ORDER BY m.created_at
+      LIMIT 1`,
+    [userId],
+  );
   return row ? { ...row } : null;
 }
 
 /** 같은 공간의 다른 한 사람. 아직 아무도 안 들어왔으면 null. */
-export function findPartner(spaceId: number, userId: number): PublicUser | null {
-  const row = db
-    .prepare(
-      `SELECT u.id, u.email, u.name, u.initial
-         FROM users u
-         JOIN memberships m ON m.user_id = u.id
-        WHERE m.space_id = ? AND u.id != ?
-        ORDER BY m.created_at
-        LIMIT 1`,
-    )
-    .get(spaceId, userId) as UserRow | undefined;
+export async function findPartner(
+  spaceId: number,
+  userId: number,
+): Promise<PublicUser | null> {
+  const row = await db.get<UserRow>(
+    `SELECT u.id, u.email, u.name, u.initial
+       FROM users u
+       JOIN memberships m ON m.user_id = u.id
+      WHERE m.space_id = ? AND u.id != ?
+      ORDER BY m.created_at
+      LIMIT 1`,
+    [spaceId, userId],
+  );
   return row ? { ...row } : null;
 }
 
@@ -144,21 +145,25 @@ declare module 'express-serve-static-core' {
 }
 
 /** 로그인·공간 소속을 확인하고 req 에 붙인다. */
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+export async function requireAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   const userId = readToken(req.cookies?.[SESSION_COOKIE]);
   if (userId === null) {
     res.status(401).json({ error: '로그인이 필요합니다.' });
     return;
   }
 
-  const user = findUserById(userId);
+  const user = await findUserById(userId);
   if (!user) {
     clearSessionCookie(res);
     res.status(401).json({ error: '로그인이 필요합니다.' });
     return;
   }
 
-  const space = findSpaceForUser(user.id);
+  const space = await findSpaceForUser(user.id);
   if (!space) {
     res.status(403).json({ error: '아직 공간에 속해 있지 않습니다.' });
     return;
@@ -166,7 +171,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 
   req.user = user;
   req.space = space;
-  req.partner = findPartner(space.id, user.id);
+  req.partner = await findPartner(space.id, user.id);
   next();
 }
 

@@ -11,7 +11,7 @@ import {
   setSessionCookie,
   verifyPassword,
 } from '../auth.ts';
-import { broadcast } from '../events.ts';
+import { bumpVersion } from '../events.ts';
 
 export const authRouter = Router();
 
@@ -29,7 +29,7 @@ function firstGrapheme(name: string): string {
  * 가입.
  * inviteCode 를 주면 그 공간에 들어가고, 없으면 새 공간을 만든다.
  */
-authRouter.post('/signup', (req, res) => {
+authRouter.post('/signup', async (req, res) => {
   const email = String(req.body?.email ?? '').trim().toLowerCase();
   const name = String(req.body?.name ?? '').trim();
   const password = String(req.body?.password ?? '');
@@ -48,7 +48,7 @@ authRouter.post('/signup', (req, res) => {
     return;
   }
 
-  const taken = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const taken = await db.get('SELECT id FROM users WHERE email = ?', [email]);
   if (taken) {
     res.status(409).json({ error: '이미 가입된 이메일입니다.' });
     return;
@@ -57,17 +57,18 @@ authRouter.post('/signup', (req, res) => {
   // 초대 코드를 줬다면 먼저 유효한지 본다 — 사용자를 만들어 놓고 실패하면 곤란하다.
   let targetSpaceId: number | null = null;
   if (inviteCode) {
-    const space = db
-      .prepare('SELECT id FROM spaces WHERE invite_code = ?')
-      .get(inviteCode) as { id: number } | undefined;
+    const space = await db.get<{ id: number }>('SELECT id FROM spaces WHERE invite_code = ?', [
+      inviteCode,
+    ]);
     if (!space) {
       res.status(404).json({ error: '초대 코드를 찾을 수 없습니다.' });
       return;
     }
-    const members = db
-      .prepare('SELECT COUNT(*) AS n FROM memberships WHERE space_id = ?')
-      .get(space.id) as { n: number };
-    if (members.n >= 2) {
+    const members = await db.get<{ n: number }>(
+      'SELECT COUNT(*) AS n FROM memberships WHERE space_id = ?',
+      [space.id],
+    );
+    if ((members?.n ?? 0) >= 2) {
       res.status(409).json({ error: '이미 두 사람이 쓰고 있는 공간입니다.' });
       return;
     }
@@ -76,46 +77,46 @@ authRouter.post('/signup', (req, res) => {
 
   const { hash, salt } = hashPassword(password);
 
-  db.exec('BEGIN');
-  let userId: number;
-  try {
-    const inserted = db
-      .prepare(
-        `INSERT INTO users (email, name, initial, password_hash, password_salt)
-         VALUES (?, ?, ?, ?, ?)`,
-      )
-      .run(email, name, firstGrapheme(name), hash, salt);
-    userId = Number(inserted.lastInsertRowid);
+  const inserted = await db.run(
+    `INSERT INTO users (email, name, initial, password_hash, password_salt)
+     VALUES (?, ?, ?, ?, ?)`,
+    [email, name, firstGrapheme(name), hash, salt],
+  );
+  const userId = inserted.lastInsertRowid;
 
+  // 뒤 단계에서 새로 만든 id 가 필요해 한 트랜잭션으로 묶을 수 없다.
+  // 중간에 실패하면 공간 없는 사용자가 남으므로 직접 되돌린다.
+  try {
     if (targetSpaceId === null) {
-      const space = db
-        .prepare('INSERT INTO spaces (name, invite_code) VALUES (?, ?)')
-        .run(`${name}의 하루`, generateInviteCode());
-      targetSpaceId = Number(space.lastInsertRowid);
+      const space = await db.run('INSERT INTO spaces (name, invite_code) VALUES (?, ?)', [
+        `${name}의 하루`,
+        generateInviteCode(),
+      ]);
+      targetSpaceId = space.lastInsertRowid;
     }
 
-    db.prepare('INSERT INTO memberships (space_id, user_id) VALUES (?, ?)').run(
+    await db.run('INSERT INTO memberships (space_id, user_id) VALUES (?, ?)', [
       targetSpaceId,
       userId,
-    );
-    db.exec('COMMIT');
+    ]);
   } catch (err) {
-    db.exec('ROLLBACK');
+    await db.run('DELETE FROM users WHERE id = ?', [userId]).catch(() => undefined);
     throw err;
   }
 
   setSessionCookie(res, userId);
-  if (inviteCode) broadcast(targetSpaceId, 'space:joined', userId);
-  res.status(201).json(sessionPayload(userId));
+  if (inviteCode) await bumpVersion(targetSpaceId, 'space:joined');
+  res.status(201).json(await sessionPayload(userId));
 });
 
-authRouter.post('/login', (req, res) => {
+authRouter.post('/login', async (req, res) => {
   const email = String(req.body?.email ?? '').trim().toLowerCase();
   const password = String(req.body?.password ?? '');
 
-  const row = db
-    .prepare('SELECT id, password_hash, password_salt FROM users WHERE email = ?')
-    .get(email) as UserAuthRow | undefined;
+  const row = await db.get<UserAuthRow>(
+    'SELECT id, password_hash, password_salt FROM users WHERE email = ?',
+    [email],
+  );
 
   if (!row || !verifyPassword(password, row.password_hash, row.password_salt)) {
     res.status(401).json({ error: '이메일이나 비밀번호가 맞지 않습니다.' });
@@ -123,7 +124,7 @@ authRouter.post('/login', (req, res) => {
   }
 
   setSessionCookie(res, row.id);
-  res.json(sessionPayload(row.id));
+  res.json(await sessionPayload(row.id));
 });
 
 authRouter.post('/logout', (_req, res) => {
@@ -139,8 +140,8 @@ authRouter.get('/me', requireAuth, (req, res) => {
   });
 });
 
-function sessionPayload(userId: number) {
-  const user = findUserById(userId)!;
-  const space = findSpaceForUser(userId)!;
-  return { user, space, partner: findPartner(space.id, userId) };
+async function sessionPayload(userId: number) {
+  const user = await findUserById(userId);
+  const space = await findSpaceForUser(userId);
+  return { user, space, partner: space ? await findPartner(space.id, userId) : null };
 }

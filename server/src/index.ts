@@ -4,8 +4,7 @@ import { fileURLToPath } from 'node:url';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
-import { requireAuth } from './auth.ts';
-import { addClient, startHeartbeat } from './events.ts';
+import { backend } from './db.ts';
 import { authRouter } from './routes/auth.ts';
 import { spaceRouter } from './routes/space.ts';
 import { todosRouter } from './routes/todos.ts';
@@ -13,7 +12,11 @@ import { todosRouter } from './routes/todos.ts';
 const here = dirname(fileURLToPath(import.meta.url));
 const webDist = resolve(here, '../../web/dist');
 
-export function createApp() {
+/**
+ * `serveWeb` 는 한 프로세스로 웹까지 서빙할 때만 켠다.
+ * Vercel 에서는 정적 파일을 플랫폼이 직접 내보내므로 API 만 담당한다.
+ */
+export function createApp({ serveWeb = true } = {}) {
   const app = express();
 
   app.disable('x-powered-by');
@@ -21,31 +24,14 @@ export function createApp() {
   app.use(cookieParser());
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true });
+    res.json({ ok: true, backend });
   });
 
   app.use('/api/auth', authRouter);
   app.use('/api/space', spaceRouter);
   app.use('/api/todos', todosRouter);
 
-  /**
-   * 실시간 반영. 한쪽이 무언가 바꾸면 다른 쪽 화면이 스스로 새로고침한다.
-   */
-  app.get('/api/events', requireAuth, (req, res) => {
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    });
-    res.write('retry: 3000\n\n');
-
-    const remove = addClient(req.space!.id, req.user!.id, res);
-    req.on('close', remove);
-  });
-
-  // 빌드된 웹을 같이 서빙한다 — 배포는 프로세스 하나면 된다.
-  if (existsSync(webDist)) {
+  if (serveWeb && existsSync(webDist)) {
     app.use(
       express.static(webDist, {
         index: false,
@@ -79,14 +65,14 @@ export function createApp() {
   return app;
 }
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
+const isMain =
+  process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
 
 if (isMain) {
   const port = Number(process.env.PORT ?? 4000);
   const host = process.env.HOST ?? '0.0.0.0';
-  startHeartbeat();
   createApp().listen(port, host, () => {
-    console.log(`[haru] http://localhost:${port} 에서 듣고 있습니다.`);
+    console.log(`[haru] http://localhost:${port} — 데이터는 ${backend} 에 저장됩니다.`);
     if (!existsSync(webDist)) {
       console.log('[haru] web/dist 가 없어 API 만 제공합니다. `npm run build` 후 다시 시작하세요.');
     }

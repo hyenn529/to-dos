@@ -16,7 +16,7 @@ after(async () => {
 });
 
 describe('갈래와 권한', () => {
-  it('업무는 소유자에게만 보인다', async () => {
+  it('업무는 사람마다 따로 있고, 상대 업무는 보기만 된다', async () => {
     const { hyein, minwoo } = await signUpPair(base);
 
     await hyein.request('POST', '/api/todos', {
@@ -24,17 +24,35 @@ describe('갈래와 권한', () => {
       lane: 'work',
       date: '2026-08-06',
     });
+    await minwoo.request('POST', '/api/todos', {
+      title: '민우 회의 준비',
+      lane: 'work',
+      date: '2026-08-06',
+    });
 
-    const mine = await hyein.request('GET', '/api/todos?from=2026-08-06&to=2026-08-06');
-    assert.equal(mine.body.todos.length, 1);
-    assert.equal(mine.body.todos[0].bucket, 'work');
-
-    const theirs = await minwoo.request('GET', '/api/todos?from=2026-08-06&to=2026-08-06');
-    assert.equal(
-      theirs.body.todos.length,
-      0,
-      '민우 화면에는 혜인의 업무가 아예 내려오지 않아야 한다',
+    // 각자에게는 자기 업무가 mineWork, 상대 업무가 partnerWork 로 온다.
+    const seenByHyein = await hyein.request('GET', '/api/todos?from=2026-08-06&to=2026-08-06');
+    const byBucket = Object.fromEntries(
+      seenByHyein.body.todos.map((t: { bucket: string; title: string }) => [t.bucket, t.title]),
     );
+    assert.equal(byBucket.mineWork, '분기 리포트');
+    assert.equal(byBucket.partnerWork, '민우 회의 준비');
+
+    const seenByMinwoo = await minwoo.request('GET', '/api/todos?from=2026-08-06&to=2026-08-06');
+    const mirrored = Object.fromEntries(
+      seenByMinwoo.body.todos.map((t: { bucket: string; title: string }) => [t.bucket, t.title]),
+    );
+    assert.equal(mirrored.mineWork, '민우 회의 준비', '보는 사람 기준으로 뒤집힌다');
+    assert.equal(mirrored.partnerWork, '분기 리포트');
+
+    // 상대 업무는 체크도 수정도 안 된다.
+    const theirWork = seenByHyein.body.todos.find(
+      (t: { bucket: string }) => t.bucket === 'partnerWork',
+    );
+    assert.equal(theirWork.canCheck, false);
+    assert.equal(theirWork.canEdit, false);
+    assert.equal(theirWork.countable, false);
+    assert.equal((await hyein.request('POST', `/api/todos/${theirWork.id}/toggle`)).status, 403);
   });
 
   it('상대의 개인 일정은 보이지만 mine 이 아니라 partner 로 온다', async () => {

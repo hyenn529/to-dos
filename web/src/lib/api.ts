@@ -44,10 +44,12 @@ export const api = {
     request<{ todos: Todo[] }>('GET', `/api/todos?from=${from}&to=${to}`),
   someday: () => request<{ todos: Todo[] }>('GET', '/api/todos/someday'),
   load: (from: string, to: string, today: string) =>
-    request<{ days: DayLoad[]; overdue: number }>(
+    request<{ days: DayLoad[]; overdue: number; version: number }>(
       'GET',
       `/api/todos/load?from=${from}&to=${to}&today=${today}`,
     ),
+  /** 변경 번호만. 폴링이 이것만 물어보므로 응답이 아주 작다. */
+  version: () => request<{ version: number }>('GET', '/api/todos/version'),
   create: (input: {
     title: string;
     lane: 'personal' | 'work';

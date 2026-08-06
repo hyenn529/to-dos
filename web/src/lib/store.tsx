@@ -10,7 +10,7 @@ import {
 import type { ReactNode } from 'react';
 import { api, ApiError } from './api.ts';
 import * as d from './dates.ts';
-import type { Bucket, DayLoad, Me, Todo, ViewMode } from './types.ts';
+import type { Bucket, DayLoad, Me, Person, Todo, ViewMode } from './types.ts';
 
 type State = {
   me: Me | null;
@@ -35,12 +35,20 @@ type Actions = {
   refresh(): Promise<void>;
   signIn(me: Me): void;
   signOut(): Promise<void>;
-  /** 갈래 이름 — 보는 사람 기준 */
+  /** 갈래 이름 — 보는 사람 기준. "혜인" / "혜인 업무" */
   bucketName(bucket: Bucket): string;
+  /** 사람 이름만 */
+  personName(person: Person): string;
   notify(message: string | null): void;
 };
 
 const StoreContext = createContext<(State & Actions) | null>(null);
+
+/**
+ * 변경 확인 주기. 둘이 쓰는 앱이라 8초면 체감상 즉시에 가깝다.
+ * 화면을 보고 있을 때만 도므로 실제 요청 수는 이보다 훨씬 적다.
+ */
+const POLL_MS = 8_000;
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
@@ -68,6 +76,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return { from: grid[0]!, to: grid[41]! };
   }, [month]);
 
+  /** 마지막으로 반영한 공간의 변경 번호. 폴링이 이 값과 비교한다. */
+  const seenVersion = useRef(-1);
+
   const refresh = useCallback(async () => {
     if (!me) return;
     try {
@@ -80,6 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setLoad(new Map(loaded.days.map((day) => [day.date, day])));
       setOverdue(loaded.overdue);
       if (view === 'someday') setSomeday(drawer.todos);
+      seenVersion.current = loaded.version;
       setError(null);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -107,29 +119,53 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
-  // 상대가 무언가 바꾸면 화면이 스스로 최신으로 맞춘다.
   const refreshRef = useRef(refresh);
   refreshRef.current = refresh;
 
+  /**
+   * 상대가 무언가 바꾸면 화면이 스스로 최신으로 맞춘다.
+   *
+   * 서버리스에서는 연결을 열어둘 수 없어 주기적으로 물어보는 방식을 쓴다. 대신
+   *   ① 화면을 보고 있지 않으면 아예 묻지 않고 (다른 앱 보는 동안 요청 0),
+   *   ② 물어보는 건 숫자 하나뿐이라 (`{"version":37}`) 바뀌었을 때만 실제로 불러온다.
+   * 덕분에 하루 종일 켜둬도 요청 수가 얼마 되지 않는다.
+   */
   useEffect(() => {
     if (!me) return;
-    const source = new EventSource('/api/events');
-    const onChange = () => void refreshRef.current();
-    source.addEventListener('change', onChange);
+
+    let timer: number | undefined;
+    let stopped = false;
+
+    const tick = async () => {
+      if (stopped || document.visibilityState !== 'visible') return;
+      try {
+        const { version } = await api.version();
+        if (version !== seenVersion.current) await refreshRef.current();
+      } catch {
+        // 잠깐 끊긴 것뿐일 수 있다. 다음 차례에 다시 시도한다.
+      }
+    };
+
+    const start = () => {
+      window.clearInterval(timer);
+      if (document.visibilityState !== 'visible') return;
+      void tick();
+      timer = window.setInterval(() => void tick(), POLL_MS);
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') start();
+      else window.clearInterval(timer);
+    };
+
+    start();
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
-      source.removeEventListener('change', onChange);
-      source.close();
+      stopped = true;
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [me]);
-
-  // 탭으로 돌아왔을 때도 한 번 맞춘다 (모바일에서 SSE 가 끊겨 있을 수 있다).
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') void refreshRef.current();
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, []);
 
   const selectDate = useCallback((date: string) => {
     setSelected(date);
@@ -159,13 +195,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setLoad(new Map());
   }, []);
 
+  const personName = useCallback(
+    (person: Person) =>
+      person === 'mine' ? (me?.user.name ?? '나') : (me?.partner?.name ?? '상대'),
+    [me],
+  );
+
+  /** "혜인" / "혜인 업무" — 사람 이름 뒤에 업무만 덧붙인다. */
   const bucketName = useCallback(
     (bucket: Bucket) => {
-      if (bucket === 'work') return '업무';
-      if (bucket === 'mine') return me?.user.name ?? '나';
-      return me?.partner?.name ?? '상대';
+      const person = personName(bucket === 'mine' || bucket === 'mineWork' ? 'mine' : 'partner');
+      return bucket.endsWith('Work') ? `${person} 업무` : person;
     },
-    [me],
+    [personName],
   );
 
   const value = useMemo(
@@ -188,6 +230,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       signIn,
       signOut,
       bucketName,
+      personName,
       notify: setError,
     }),
     [
@@ -208,6 +251,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       signIn,
       signOut,
       bucketName,
+      personName,
     ],
   );
 
@@ -220,9 +264,9 @@ export function useStore() {
   return value;
 }
 
-/** 한 날짜의 할 일을 갈래별로 나눈다. 순서는 언제나 나 → 상대 → 업무. */
+/** 한 날짜의 할 일을 갈래별로 나눈다. 끝낸 것은 아래로. */
 export function groupByBucket(todos: Todo[]): Record<Bucket, Todo[]> {
-  const out: Record<Bucket, Todo[]> = { mine: [], partner: [], work: [] };
+  const out: Record<Bucket, Todo[]> = { mine: [], mineWork: [], partner: [], partnerWork: [] };
   for (const todo of todos) out[todo.bucket].push(todo);
   for (const list of Object.values(out)) {
     list.sort((a, b) => {
@@ -233,4 +277,16 @@ export function groupByBucket(todos: Todo[]): Record<Bucket, Todo[]> {
   return out;
 }
 
-export const BUCKET_ORDER: Bucket[] = ['mine', 'partner', 'work'];
+/** 어디서나 이 순서 — 내 것 먼저, 각자 개인 다음 업무. */
+export const BUCKET_ORDER: Bucket[] = ['mine', 'mineWork', 'partner', 'partnerWork'];
+
+export const PERSON_ORDER: Person[] = ['mine', 'partner'];
+
+/** 사람 한 명이 가진 갈래 두 개 */
+export function bucketsOf(person: Person): Bucket[] {
+  return person === 'mine' ? ['mine', 'mineWork'] : ['partner', 'partnerWork'];
+}
+
+export function personOf(bucket: Bucket): Person {
+  return bucket === 'mine' || bucket === 'mineWork' ? 'mine' : 'partner';
+}

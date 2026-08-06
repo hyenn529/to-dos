@@ -1,5 +1,8 @@
 export type Lane = 'personal' | 'work';
-export type Bucket = 'mine' | 'partner' | 'work';
+export type Bucket = 'mine' | 'mineWork' | 'partner' | 'partnerWork';
+
+/** 사람 축 — 갈래 두 개를 묶는 단위 */
+export type Person = 'mine' | 'partner';
 
 export type User = {
   id: number;
@@ -55,8 +58,9 @@ export type Todo = {
 export type DayLoad = {
   date: string;
   mine: number;
+  mineWork: number;
   partner: number;
-  work: number;
+  partnerWork: number;
   allDone: boolean;
 };
 

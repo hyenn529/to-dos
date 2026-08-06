@@ -1,20 +1,22 @@
 /**
  * 도메인 타입.
  *
- * 갈래(lane)는 사람 이름이 아니라 의미로 저장한다. 화면에 보이는 "혜인 / 민우 / 업무"는
- * `lane` 과 `ownerId` 를 **보는 사람 기준으로** 옮긴 결과다.
+ * 갈래는 두 축으로 이루어진다.
  *
- *   내 갈래   = lane 'personal' + ownerId === 나
- *   상대 갈래 = lane 'personal' + ownerId === 상대
- *   업무      = lane 'work'     + ownerId === 나   (업무는 남에게 보이지 않는다)
+ *   누구의 것인가 : 나 / 상대   ← `ownerId` 를 보는 사람과 비교해 정한다
+ *   어떤 일인가   : 개인 / 업무 ← `lane`
  *
- * 덕분에 누가 로그인하든 같은 코드가 그대로 동작하고, 상대에게는 늘 자기 갈래가 왼쪽에 온다.
+ * 그래서 화면에는 네 칸이 나온다. 사람 이름("혜인", "민우")은 저장하지 않는다 —
+ * 누가 로그인하든 같은 코드가 돌고, 각자에게 자기 갈래가 먼저 온다.
  */
 
 export type Lane = 'personal' | 'work';
 
-/** 화면에 그려지는 세 칸. 서버가 보는 사람 기준으로 계산해 내려준다. */
-export type Bucket = 'mine' | 'partner' | 'work';
+/** 화면에 그려지는 네 칸. 서버가 보는 사람 기준으로 계산해 내려준다. */
+export type Bucket = 'mine' | 'mineWork' | 'partner' | 'partnerWork';
+
+/** 어디서나 이 순서로 놓는다 — 내 것 먼저, 각자 개인 다음 업무. */
+export const BUCKET_ORDER: Bucket[] = ['mine', 'mineWork', 'partner', 'partnerWork'];
 
 export type PublicUser = {
   id: number;
@@ -73,8 +75,9 @@ export type Todo = {
 export type DayLoad = {
   date: string;
   mine: number;
+  mineWork: number;
   partner: number;
-  work: number;
+  partnerWork: number;
   /** 그날 항목이 하나라도 있는데 전부 끝났으면 true → 회색 막대 */
   allDone: boolean;
 };
