@@ -1,0 +1,136 @@
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import { signUpPair, startServer } from './helpers.ts';
+
+let base: string;
+let close: () => Promise<void>;
+
+before(async () => {
+  const server = await startServer();
+  base = server.base;
+  close = server.close;
+});
+
+after(async () => {
+  await close();
+});
+
+describe('갈래와 권한', () => {
+  it('업무는 소유자에게만 보인다', async () => {
+    const { hyein, minwoo } = await signUpPair(base);
+
+    await hyein.request('POST', '/api/todos', {
+      title: '분기 리포트',
+      lane: 'work',
+      date: '2026-08-06',
+    });
+
+    const mine = await hyein.request('GET', '/api/todos?from=2026-08-06&to=2026-08-06');
+    assert.equal(mine.body.todos.length, 1);
+    assert.equal(mine.body.todos[0].bucket, 'work');
+
+    const theirs = await minwoo.request('GET', '/api/todos?from=2026-08-06&to=2026-08-06');
+    assert.equal(
+      theirs.body.todos.length,
+      0,
+      '민우 화면에는 혜인의 업무가 아예 내려오지 않아야 한다',
+    );
+  });
+
+  it('상대의 개인 일정은 보이지만 mine 이 아니라 partner 로 온다', async () => {
+    const { hyein, minwoo } = await signUpPair(base);
+
+    await minwoo.request('POST', '/api/todos', {
+      title: '야근',
+      lane: 'personal',
+      date: '2026-08-07',
+    });
+
+    const seenByHyein = await hyein.request('GET', '/api/todos?from=2026-08-07&to=2026-08-07');
+    const todo = seenByHyein.body.todos[0];
+    assert.equal(todo.bucket, 'partner');
+    assert.equal(todo.canCheck, false, '상대 항목은 체크할 수 없다');
+    assert.equal(todo.canEdit, false, '상대 항목은 고칠 수 없다');
+    assert.equal(todo.countable, false, '상대 항목은 내 남은 개수에 들어가지 않는다');
+
+    const seenByMinwoo = await minwoo.request('GET', '/api/todos?from=2026-08-07&to=2026-08-07');
+    assert.equal(seenByMinwoo.body.todos[0].bucket, 'mine');
+    assert.equal(seenByMinwoo.body.todos[0].canCheck, true);
+  });
+
+  it('상대의 할 일은 체크·수정·삭제가 막힌다', async () => {
+    const { hyein, minwoo } = await signUpPair(base);
+
+    const created = await minwoo.request('POST', '/api/todos', {
+      title: '민우 회식',
+      lane: 'personal',
+      date: '2026-08-08',
+    });
+    const id = created.body.todo.id;
+
+    assert.equal((await hyein.request('POST', `/api/todos/${id}/toggle`)).status, 403);
+    assert.equal((await hyein.request('PATCH', `/api/todos/${id}`, { title: '고침' })).status, 403);
+    assert.equal((await hyein.request('DELETE', `/api/todos/${id}`)).status, 403);
+
+    // 주인은 당연히 된다.
+    assert.equal((await minwoo.request('POST', `/api/todos/${id}/toggle`)).status, 200);
+  });
+
+  it('"같이" 항목은 둘 다 체크할 수 있다', async () => {
+    const { hyein, minwoo } = await signUpPair(base);
+
+    const created = await minwoo.request('POST', '/api/todos', {
+      title: '공항 데려다주기',
+      lane: 'personal',
+      date: '2026-08-12',
+      together: true,
+    });
+    const id = created.body.todo.id;
+
+    const seen = await hyein.request('GET', '/api/todos?from=2026-08-12&to=2026-08-12');
+    assert.equal(seen.body.todos[0].canCheck, true, '같이 항목은 상대도 체크할 수 있다');
+    assert.equal(seen.body.todos[0].canEdit, false, '그래도 고치는 건 주인만');
+
+    const toggled = await hyein.request('POST', `/api/todos/${id}/toggle`);
+    assert.equal(toggled.status, 200);
+    assert.equal(toggled.body.todo.done, true);
+  });
+
+  it('lane 과 owner 는 서버가 정하므로 남의 칸에 끼워 넣을 수 없다', async () => {
+    const { hyein, minwoo } = await signUpPair(base);
+    const meMinwoo = await minwoo.request('GET', '/api/auth/me');
+
+    // owner_id 를 실어 보내도 무시된다.
+    await hyein.request('POST', '/api/todos', {
+      title: '몰래 넣기',
+      lane: 'personal',
+      date: '2026-08-09',
+      ownerId: meMinwoo.body.user.id,
+    });
+
+    const seenByMinwoo = await minwoo.request('GET', '/api/todos?from=2026-08-09&to=2026-08-09');
+    assert.equal(seenByMinwoo.body.todos[0].bucket, 'partner');
+    assert.equal(seenByMinwoo.body.todos[0].canEdit, false);
+  });
+
+  it('내 항목만 순서를 바꿀 수 있다', async () => {
+    const { hyein, minwoo } = await signUpPair(base);
+    const theirs = await minwoo.request('POST', '/api/todos', {
+      title: '민우 일정',
+      lane: 'personal',
+      date: '2026-08-10',
+    });
+
+    const res = await hyein.request('POST', '/api/todos/reorder', {
+      ids: [theirs.body.todo.id],
+    });
+    assert.equal(res.status, 403);
+  });
+});
+
+describe('로그인하지 않은 요청', () => {
+  it('전부 401 로 막힌다', async () => {
+    const res = await fetch(`${base}/api/todos?from=2026-08-01&to=2026-08-31`);
+    assert.equal(res.status, 401);
+  });
+});

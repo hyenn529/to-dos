@@ -1,0 +1,148 @@
+/*
+ * 디자인 토큰 — 설계서 v0.6 과 같은 값.
+ *
+ * 각 갈래 색은 두 벌이다.
+ *   밝은 값     : 막대·체크박스 테두리 같은 '표시'
+ *   -ink 값     : 글자 (밝은 하늘색을 글자에 쓰면 흰 배경에서 읽히지 않는다)
+ *
+ * 갈래는 사람 이름이 아니라 보는 사람 기준의 자리로 정의한다.
+ *   mine    = 나        (라일락)
+ *   partner = 상대      (스카이)
+ *   work    = 업무      (버밀리언) — 나만 본다
+ */
+
+:root {
+  --paper: #e2edfa;
+  --surface: #ffffff;
+  --surface-2: #eff5fd;
+  --ink: #1e2a4a;
+  --ink-2: #48557a;
+  --muted: #7c88a8;
+  --faint: #a9b4cf;
+  --line: #d4e0f1;
+  --line-soft: #e5edf8;
+
+  --mine: #a281ee;
+  --mine-ink: #6b3fc4;
+  --mine-soft: #ede4fe;
+
+  --partner: #3e9de8;
+  --partner-ink: #16639f;
+  --partner-soft: #dcedfc;
+
+  --work: #f5503c;
+  --work-ink: #c0301f;
+  --work-soft: #ffe0da;
+
+  --shadow: 0 1px 1px rgba(30, 42, 74, 0.04), 0 12px 32px -18px rgba(30, 42, 74, 0.24);
+  --shadow-lift: 0 2px 4px rgba(30, 42, 74, 0.06), 0 18px 40px -22px rgba(30, 42, 74, 0.36);
+
+  --sans: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo',
+    'Noto Sans KR', 'Malgun Gothic', 'Segoe UI', Roboto, sans-serif;
+
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+
+  --pane-w: 320px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0a0f1c;
+    --surface: #141b2e;
+    --surface-2: #1c2438;
+    --ink: #e6edfb;
+    --ink-2: #aeb9d4;
+    --muted: #7e8aa8;
+    --faint: #5a6584;
+    --line: #2a3550;
+    --line-soft: #212b42;
+
+    --mine: #b79bf7;
+    --mine-ink: #c9b4fb;
+    --mine-soft: #241c3d;
+
+    --partner: #5fb5f5;
+    --partner-ink: #8ccbfa;
+    --partner-soft: #12283f;
+
+    --work: #ff7a66;
+    --work-ink: #ff9e8d;
+    --work-soft: #3b1d18;
+
+    --shadow: 0 1px 1px rgba(0, 0, 0, 0.4), 0 12px 32px -20px rgba(0, 0, 0, 0.8);
+    --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 20px 44px -24px rgba(0, 0, 0, 0.9);
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #0a0f1c;
+  --surface: #141b2e;
+  --surface-2: #1c2438;
+  --ink: #e6edfb;
+  --ink-2: #aeb9d4;
+  --muted: #7e8aa8;
+  --faint: #5a6584;
+  --line: #2a3550;
+  --line-soft: #212b42;
+
+  --mine: #b79bf7;
+  --mine-ink: #c9b4fb;
+  --mine-soft: #241c3d;
+
+  --partner: #5fb5f5;
+  --partner-ink: #8ccbfa;
+  --partner-soft: #12283f;
+
+  --work: #ff7a66;
+  --work-ink: #ff9e8d;
+  --work-soft: #3b1d18;
+
+  --shadow: 0 1px 1px rgba(0, 0, 0, 0.4), 0 12px 32px -20px rgba(0, 0, 0, 0.8);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 20px 44px -24px rgba(0, 0, 0, 0.9);
+}
+
+:root[data-theme='light'] {
+  --paper: #e2edfa;
+  --surface: #ffffff;
+  --surface-2: #eff5fd;
+  --ink: #1e2a4a;
+  --ink-2: #48557a;
+  --muted: #7c88a8;
+  --faint: #a9b4cf;
+  --line: #d4e0f1;
+  --line-soft: #e5edf8;
+
+  --mine: #a281ee;
+  --mine-ink: #6b3fc4;
+  --mine-soft: #ede4fe;
+
+  --partner: #3e9de8;
+  --partner-ink: #16639f;
+  --partner-soft: #dcedfc;
+
+  --work: #f5503c;
+  --work-ink: #c0301f;
+  --work-soft: #ffe0da;
+
+  --shadow: 0 1px 1px rgba(30, 42, 74, 0.04), 0 12px 32px -18px rgba(30, 42, 74, 0.24);
+  --shadow-lift: 0 2px 4px rgba(30, 42, 74, 0.06), 0 18px 40px -22px rgba(30, 42, 74, 0.36);
+}
+
+/* 갈래별 색을 한 곳에서 꺼내 쓰기 위한 스코프 변수 */
+[data-bucket='mine'] {
+  --bucket: var(--mine);
+  --bucket-ink: var(--mine-ink);
+  --bucket-soft: var(--mine-soft);
+}
+[data-bucket='partner'] {
+  --bucket: var(--partner);
+  --bucket-ink: var(--partner-ink);
+  --bucket-soft: var(--partner-soft);
+}
+[data-bucket='work'] {
+  --bucket: var(--work);
+  --bucket-ink: var(--work-ink);
+  --bucket-soft: var(--work-soft);
+}

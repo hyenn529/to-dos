@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="하루">
+  <rect width="512" height="512" rx="112" fill="#E2EDFA"/>
+  <rect x="128" y="128" width="176" height="176" rx="56" fill="#3E9DE8"/>
+  <rect x="208" y="208" width="176" height="176" rx="56" fill="#A281EE"/>
+  <rect x="152" y="404" width="208" height="26" rx="13" fill="#F5503C"/>
+</svg>
