@@ -4,20 +4,23 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   :root {
-    --paper:      #E1F0E9;
+    /* 밝은 색은 막대·체크·아이콘 같은 '표시'용, -ink 는 글자용 */
+    --paper:      #E2EDFA;
     --surface:    #FFFFFF;
-    --surface-2:  #EEF8F3;
-    --ink:        #0F2E2A;
-    --ink-2:      #37605A;
-    --muted:      #6C918A;
-    --faint:      #A0C0B7;
-    --line:       #CDE6DC;
-    --line-soft:  #E1F0EA;
-    --work:       #0A8073;
-    --work-soft:  #CFF0E8;
-    --personal:   #D2481F;
-    --personal-soft:#FFE0D3;
-    --soft-shadow: 0 1px 1px rgba(15,46,42,.04), 0 12px 32px -18px rgba(15,46,42,.26);
+    --surface-2:  #EFF5FD;
+    --ink:        #1E2A4A;
+    --ink-2:      #48557A;
+    --muted:      #7C88A8;
+    --faint:      #A9B4CF;
+    --line:       #D4E0F1;
+    --line-soft:  #E5EDF8;
+    --work:       #3E9DE8;
+    --work-ink:   #16639F;
+    --work-soft:  #DCEDFC;
+    --personal:   #A281EE;
+    --personal-ink:#6B3FC4;
+    --personal-soft:#EDE4FE;
+    --soft-shadow: 0 1px 1px rgba(30,42,74,.04), 0 12px 32px -18px rgba(30,42,74,.24);
 
     --sans: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
             "Noto Sans KR", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
@@ -25,29 +28,29 @@
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --paper:#08120F; --surface:#102420; --surface-2:#173029;
-      --ink:#DFF5EE; --ink-2:#A9C9C0; --muted:#7A9B92; --faint:#587771;
-      --line:#23443C; --line-soft:#1B352F;
-      --work:#34D6BC; --work-soft:#0C332C;
-      --personal:#FF8A5C; --personal-soft:#3A2118;
+      --paper:#0A0F1C; --surface:#141B2E; --surface-2:#1C2438;
+      --ink:#E6EDFB; --ink-2:#AEB9D4; --muted:#7E8AA8; --faint:#5A6584;
+      --line:#2A3550; --line-soft:#212B42;
+      --work:#5FB5F5; --work-ink:#8CCBFA; --work-soft:#12283F;
+      --personal:#B79BF7; --personal-ink:#C9B4FB; --personal-soft:#241C3D;
       --soft-shadow: 0 1px 1px rgba(0,0,0,.4), 0 12px 32px -20px rgba(0,0,0,.8);
     }
   }
   :root[data-theme="dark"] {
-    --paper:#08120F; --surface:#102420; --surface-2:#173029;
-    --ink:#DFF5EE; --ink-2:#A9C9C0; --muted:#7A9B92; --faint:#587771;
-    --line:#23443C; --line-soft:#1B352F;
-    --work:#34D6BC; --work-soft:#0C332C;
-    --personal:#FF8A5C; --personal-soft:#3A2118;
+    --paper:#0A0F1C; --surface:#141B2E; --surface-2:#1C2438;
+    --ink:#E6EDFB; --ink-2:#AEB9D4; --muted:#7E8AA8; --faint:#5A6584;
+    --line:#2A3550; --line-soft:#212B42;
+    --work:#5FB5F5; --work-ink:#8CCBFA; --work-soft:#12283F;
+    --personal:#B79BF7; --personal-ink:#C9B4FB; --personal-soft:#241C3D;
     --soft-shadow: 0 1px 1px rgba(0,0,0,.4), 0 12px 32px -20px rgba(0,0,0,.8);
   }
   :root[data-theme="light"] {
-    --paper:#E1F0E9; --surface:#FFFFFF; --surface-2:#EEF8F3;
-    --ink:#0F2E2A; --ink-2:#37605A; --muted:#6C918A; --faint:#A0C0B7;
-    --line:#CDE6DC; --line-soft:#E1F0EA;
-    --work:#0A8073; --work-soft:#CFF0E8;
-    --personal:#D2481F; --personal-soft:#FFE0D3;
-    --soft-shadow: 0 1px 1px rgba(15,46,42,.04), 0 12px 32px -18px rgba(15,46,42,.26);
+    --paper:#E2EDFA; --surface:#FFFFFF; --surface-2:#EFF5FD;
+    --ink:#1E2A4A; --ink-2:#48557A; --muted:#7C88A8; --faint:#A9B4CF;
+    --line:#D4E0F1; --line-soft:#E5EDF8;
+    --work:#3E9DE8; --work-ink:#16639F; --work-soft:#DCEDFC;
+    --personal:#A281EE; --personal-ink:#6B3FC4; --personal-soft:#EDE4FE;
+    --soft-shadow: 0 1px 1px rgba(30,42,74,.04), 0 12px 32px -18px rgba(30,42,74,.24);
   }
 
   body {
@@ -68,8 +71,8 @@
   .lede { font-size:1.1rem; color:var(--ink-2); max-width:56ch; }
   .eyebrow { font-size:12px; letter-spacing:.18em; text-transform:uppercase;
              color:var(--muted); margin:0 0 12px; font-weight:500; }
-  a { color:var(--work); }
-  :focus-visible { outline:2px solid var(--work); outline-offset:3px; }
+  a { color:var(--work-ink); }
+  :focus-visible { outline:2px solid var(--work-ink); outline-offset:3px; }
 
   .hero { padding:76px 0 10px; }
   .band { padding:60px 0 0; }
@@ -114,7 +117,8 @@
   .app { display:grid; grid-template-columns:352px 1fr; min-height:600px; font-size:13px; }
 
   /* ---- 왼쪽 캘린더 패널 ---- */
-  .calpane { background:linear-gradient(170deg, var(--work-soft) 0%, var(--surface-2) 42%);
+  .calpane { background:linear-gradient(168deg,
+               var(--work-soft) 0%, var(--personal-soft) 44%, var(--surface-2) 100%);
              padding:22px 22px 20px; display:flex; flex-direction:column; gap:20px; }
   .brand { display:flex; align-items:center; gap:9px; font-size:15px;
            font-weight:700; letter-spacing:-.02em; }
@@ -134,7 +138,7 @@
   .cal { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
   .cal .wd { text-align:center; font-size:10.5px; color:var(--faint); padding-bottom:6px;
              letter-spacing:.08em; }
-  .cal .wd.sun { color:var(--personal); }
+  .cal .wd.sun { color:var(--personal-ink); }
   .day { height:52px; border-radius:9px; display:flex; flex-direction:column;
          align-items:center; justify-content:flex-start; padding-top:7px; gap:5px; }
   .day .n { font-size:13px; color:var(--ink-2); font-weight:450; line-height:1; }
@@ -142,7 +146,7 @@
   .day.today { background:var(--ink); }
   .day.today .n { color:var(--surface); font-weight:700; }
   .day.pick { box-shadow:inset 0 0 0 1.5px var(--ink); }
-  .day.rest .n { color:var(--personal); }
+  .day.rest .n { color:var(--personal-ink); }
 
   /* 부담 없는 밀도 표시 — 두 개의 얇은 막대 */
   .load { display:flex; flex-direction:column; gap:3px; align-items:center; width:100%; }
@@ -198,8 +202,8 @@
   .lane-h .dotmk { width:9px; height:9px; border-radius:3px; }
   .lane-h .nm { font-size:15px; font-weight:650; letter-spacing:-.02em; }
   .lane-h .ct { margin-left:auto; font-size:12px; color:var(--muted); }
-  .lane-h.w .nm { color:var(--work); } .lane-h.w .dotmk { background:var(--work); }
-  .lane-h.p .nm { color:var(--personal); } .lane-h.p .dotmk { background:var(--personal); }
+  .lane-h.w .nm { color:var(--work-ink); } .lane-h.w .dotmk { background:var(--work); }
+  .lane-h.p .nm { color:var(--personal-ink); } .lane-h.p .dotmk { background:var(--personal); }
 
   .item { display:flex; gap:11px; align-items:flex-start; padding:9px 11px;
           border-radius:9px; background:var(--surface-2); }
@@ -241,7 +245,7 @@
   .wcol .wh .dw { font-size:10.5px; color:var(--muted); letter-spacing:.08em; }
   .wcol .wh .dd { font-size:17px; font-weight:600; letter-spacing:-.02em; line-height:1.3; }
   .wcol.is-today .wh .dd { color:var(--ink); }
-  .wcol.is-rest .wh .dw, .wcol.is-rest .wh .dd { color:var(--personal); }
+  .wcol.is-rest .wh .dw, .wcol.is-rest .wh .dd { color:var(--personal-ink); }
   .mini-item { display:flex; gap:6px; align-items:flex-start; font-size:11px; line-height:1.4;
                background:var(--surface); border-radius:7px; padding:6px 7px; }
   .wcol.is-rest .mini-item, .wcol.is-today .mini-item { background:var(--surface-2); }
@@ -271,8 +275,8 @@
   .p-cap { font-size:.84rem; color:var(--muted); margin:10px 4px 0; max-width:33ch; line-height:1.65; }
   .p-cap b { color:var(--ink); font-weight:600; }
 
-  .m-cal { padding:6px 14px 12px;
-           background:linear-gradient(170deg, var(--work-soft) 0%, var(--surface-2) 70%); }
+  .m-cal { padding:6px 14px 12px; background:linear-gradient(168deg,
+             var(--work-soft) 0%, var(--personal-soft) 55%, var(--surface-2) 100%); }
   .m-caltop { display:flex; align-items:center; gap:8px; padding:6px 4px 10px; }
   .m-caltop .mo { font-size:19px; font-weight:650; letter-spacing:-.03em; }
   .m-caltop .yr { font-size:11px; color:var(--muted); }
@@ -308,11 +312,11 @@
   .chipset { display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; }
   .chipset span { font-size:11.5px; border-radius:99px; padding:5px 12px; color:var(--ink-2);
                   background:var(--surface-2); }
-  .chipset span.on-p { background:var(--personal); color:#fff; font-weight:600; }
+  .chipset span.on-p { background:var(--personal-ink); color:#fff; font-weight:600; }
   .hintline { margin-top:12px; font-size:11px; color:var(--faint); line-height:1.6; }
 
   /* ---- 토큰 ---- */
-  .swrow { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+  .swrow { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
   @media (max-width:860px){ .swrow { grid-template-columns:repeat(2,1fr);} }
   .swbox { border-radius:10px; overflow:hidden; background:var(--surface); box-shadow:var(--soft-shadow); }
   .swbox .fill { height:62px; }
@@ -416,7 +420,7 @@
       <div class="card">
         <span class="kicker">04</span>
         <h3>구분은 색 + 위치</h3>
-        <p>개인은 왼쪽·탠저린, 업무는 오른쪽·제이드. 색만으로 나누지 않아
+        <p>개인은 왼쪽·라일락, 업무는 오른쪽·스카이. 색만으로 나누지 않아
           색약이거나 화면이 작아도 자리로 구분됩니다.</p>
       </div>
     </div>
@@ -1103,20 +1107,24 @@
     <div class="band-head">
       <p class="eyebrow">디자인 토큰</p>
       <h2>색과 글자</h2>
-      <p>맑은 민트 바탕에 <b>제이드</b>와 <b>탠저린</b> 두 가지. 매일 열어도 무겁지 않게
-        채도는 높이되 면적은 좁게 씁니다. 경고용 빨강은 팔레트에 없습니다.</p>
+      <p>맑은 하늘색 바탕에 <b>스카이</b>와 <b>라일락</b> 두 가지.
+        같은 색을 밝은 값과 짙은 값 <b>두 벌</b>로 나눠, 밝은 쪽은 막대·체크 같은 표시에,
+        짙은 쪽은 글자에 씁니다 — 화면은 화사하고 글자는 또렷합니다.
+        경고용 빨강은 팔레트에 없습니다.</p>
     </div>
     <div class="swrow">
       <div class="swbox"><div class="fill" style="background:var(--personal)"></div>
-        <div class="mt"><b>개인 · 탠저린</b>#D2481F</div></div>
+        <div class="mt"><b>개인 · 라일락</b>표시용<br>#A281EE</div></div>
+      <div class="swbox"><div class="fill" style="background:var(--personal-ink)"></div>
+        <div class="mt"><b>개인 글자</b>바이올렛<br>#6B3FC4</div></div>
       <div class="swbox"><div class="fill" style="background:var(--work)"></div>
-        <div class="mt"><b>업무 · 제이드</b>#0A8073</div></div>
-      <div class="swbox"><div class="fill" style="background:var(--ink)"></div>
-        <div class="mt"><b>글자 · 오늘</b>#0F2E2A</div></div>
+        <div class="mt"><b>업무 · 스카이</b>표시용<br>#3E9DE8</div></div>
+      <div class="swbox"><div class="fill" style="background:var(--work-ink)"></div>
+        <div class="mt"><b>업무 글자</b>오션<br>#16639F</div></div>
       <div class="swbox"><div class="fill" style="background:var(--paper)"></div>
-        <div class="mt"><b>바탕 · 민트</b>#E1F0E9</div></div>
-      <div class="swbox"><div class="fill" style="background:var(--faint)"></div>
-        <div class="mt"><b>흐림 · 완료</b>#A0C0B7</div></div>
+        <div class="mt"><b>바탕 · 스카이</b>연하게<br>#E2EDFA</div></div>
+      <div class="swbox"><div class="fill" style="background:var(--ink)"></div>
+        <div class="mt"><b>글자 · 오늘</b>딥인디고<br>#1E2A4A</div></div>
     </div>
     <div class="cols c3" style="margin-top:14px">
       <div class="card">
@@ -1134,8 +1142,9 @@
       <div class="card">
         <span class="kicker">접근성</span>
         <h3>색 없이도 읽힌다</h3>
-        <p>개인은 왼쪽·아래 막대, 업무는 오른쪽·위 막대. 자리로 이미 구분되어
-          색이 안 보여도 문제없습니다. 터치 영역 44px 이상.</p>
+        <p>스카이와 라일락은 둘 다 시원한 계열이라 색만으로는 헷갈릴 수 있습니다.
+          그래서 <b>개인은 늘 왼쪽·아래 막대, 업무는 늘 오른쪽·위 막대</b>로 자리를 고정했습니다.
+          터치 영역 44px 이상.</p>
       </div>
     </div>
   </section>
