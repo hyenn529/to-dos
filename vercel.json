@@ -1,11 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm --workspace @haru/web run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null,
   "functions": {
-    "api/index.ts": {
+    "api/index.js": {
       "maxDuration": 15
     }
   },

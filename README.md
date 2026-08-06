@@ -87,7 +87,8 @@ lane 'work'     + owner === 상대 → partnerWork
 ## 구조
 
 ```
-api/index.ts     Vercel 서버리스 진입점 (정적 파일은 Vercel 이 직접 서빙)
+api/index.js     Vercel 함수 번들 — **생성물이지만 커밋한다**
+                 (Vercel 이 빌드 '전에' functions 패턴을 검사하므로 미리 있어야 한다)
 vercel.json      라우팅 · 캐시 헤더
 
 server/          Express 5 — 로컬에서는 API 와 웹을 한 프로세스에서
@@ -98,6 +99,7 @@ server/          Express 5 — 로컬에서는 API 와 웹을 한 프로세스�
   src/todos.ts     조회·쓰기 + 갈래 계산과 권한 판정
   src/events.ts    변경 번호 — 쓰기마다 +1, 화면은 이 숫자만 보고 다시 부른다
   src/routes/      auth · space · todos
+  src/vercel-entry.ts  Vercel 함수의 원본. 빌드 때 api/index.js 로 번들된다
   test/            node:test 통합 테스트 20개 (가짜 libSQL 서버로 Turso 경로까지 검증)
 
 web/             React 19 + Vite 8 + TypeScript
@@ -118,7 +120,7 @@ Turso 클라이언트는 순수 JS(`@libsql/client/web`)를 쓴다.
 | 명령 | 하는 일 |
 |------|---------|
 | `npm run dev` | 서버(4000) + Vite 개발 서버(5173) 동시 실행. `/api` 는 프록시된다 |
-| `npm run build` | 웹을 저장소 루트의 `dist/` 로 빌드 |
+| `npm run build` | 웹을 루트 `dist/` 로, API 를 `api/index.js` 로 빌드 |
 | `npm start` | 빌드된 웹까지 한 프로세스로 서빙 (4000) |
 | `npm test` | 서버 통합 테스트 |
 | `npm run typecheck` | 웹 타입 검사 |
@@ -186,6 +188,17 @@ Turso 클라이언트는 순수 JS(`@libsql/client/web`)를 쓴다.
 
 > 데이터는 Turso 서버에 있지만 **SQLite 파일 그대로**라, 언제든 통째로 내려받아
 > 백업하거나 자기 서버로 옮길 수 있다.
+
+### 배포 전에 로컬에서 검증하기
+
+배포 환경의 빌드는 로컬 `npm run build` 와 다르게 동작한다. 실제 빌더를 그대로 돌려 본다.
+
+```
+npx vercel build       # Vercel 이 돌리는 것과 같은 빌드 → .vercel/output/
+```
+
+함수는 **번들된 단일 파일**이어야 한다. 상대 경로 import 가 남아 있으면
+빌드는 성공해도 실행 시점에 모듈을 못 찾고 죽는다 — 배포한 뒤에야 드러나는 종류의 실패다.
 
 ## 설계 문서
 

@@ -1,14 +1,18 @@
 /**
  * Vercel 서버리스 진입점.
  *
- * Vercel 은 `api/` 아래 파일 하나를 함수 하나로 만든다. `vercel.json` 이
- * `/api/*` 를 전부 이 파일로 보내므로, Express 앱이 그대로 라우팅을 이어받는다.
+ * 이 파일은 빌드 때 `api/index.js` 로 **번들되어** 배포된다. 번들하지 않으면
+ * Vercel 이 타입만 벗겨내고 상대 경로 import 를 그대로 남겨, 함수가 실행 시점에
+ * 모듈을 못 찾고 죽는다 (빌드는 성공한 것처럼 끝나므로 배포 후에야 드러난다).
  *
- * 정적 파일(웹 화면)은 여기서 다루지 않는다 — Vercel 이 `web/dist` 를 직접 내보내는 편이
+ * `vercel.json` 의 rewrite 가 `/api/*` 를 전부 이 함수로 보내므로,
+ * Express 앱이 그대로 라우팅을 이어받는다.
+ *
+ * 정적 파일(웹 화면)은 여기서 다루지 않는다 — Vercel 이 `dist/` 를 직접 내보내는 편이
  * 빠르고 캐시도 잘 된다. 그래서 `serveWeb: false` 로 API 만 담당한다.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { createApp } from '../server/src/index.ts';
+import { createApp } from './index.ts';
 
 const app = createApp({ serveWeb: false });
 

@@ -8,3 +8,9 @@ data/
 .env.local
 .DS_Store
 *.log
+
+# Vercel 함수 번들(api/index.js)은 일부러 커밋한다.
+# Vercel 이 빌드 '전에' functions 패턴을 검사하므로, 그때 파일이 없으면 배포가 거절된다.
+# 내용은 매 빌드마다 server/src/vercel-entry.ts 에서 다시 생성된다.
+api/index.js.map
+.vercel/

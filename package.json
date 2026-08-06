@@ -14,12 +14,15 @@
     "//workspace": "--workspace 는 run 앞에 둔다. 스크립트 이름 뒤에 두면 npm 버전에 따라 스크립트 인자로 넘어가 무시되고, 모든 워크스페이스에서 실행된다.",
     "dev:server": "npm --workspace @haru/server run dev",
     "dev:web": "npm --workspace @haru/web run dev",
-    "build": "npm --workspace @haru/web run build",
+    "build": "npm --workspace @haru/web run build && npm run build:api",
+    "//build:api": "Vercel 함수는 번들해서 내보낸다. 상대 경로 import 가 남으면 배포된 함수가 실행 시점에 모듈을 못 찾는다.",
+    "build:api": "esbuild server/src/vercel-entry.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=api/index.js --log-level=warning",
     "start": "npm --workspace @haru/server run start",
     "test": "npm --workspace @haru/server run test",
     "typecheck": "npm --workspace @haru/web run typecheck"
   },
   "devDependencies": {
+    "esbuild": "^0.28.0",
     "npm-run-all": "^4.1.5"
   }
 }
