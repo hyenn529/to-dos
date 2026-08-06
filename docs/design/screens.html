@@ -4,20 +4,20 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   :root {
-    --paper:      #E8ECE7;
-    --surface:    #FBFCFA;
-    --surface-2:  #F1F4EF;
-    --ink:        #1F241F;
-    --ink-2:      #454D44;
-    --muted:      #7B837A;
-    --faint:      #A8AFA5;
-    --line:       #D7DCD4;
-    --line-soft:  #E5E9E2;
-    --work:       #35696D;
-    --work-soft:  #DCE9E9;
-    --personal:   #A96B33;
-    --personal-soft:#F3E7D9;
-    --soft-shadow: 0 1px 1px rgba(31,36,31,.03), 0 10px 30px -18px rgba(31,36,31,.28);
+    --paper:      #E1F0E9;
+    --surface:    #FFFFFF;
+    --surface-2:  #EEF8F3;
+    --ink:        #0F2E2A;
+    --ink-2:      #37605A;
+    --muted:      #6C918A;
+    --faint:      #A0C0B7;
+    --line:       #CDE6DC;
+    --line-soft:  #E1F0EA;
+    --work:       #0A8073;
+    --work-soft:  #CFF0E8;
+    --personal:   #D2481F;
+    --personal-soft:#FFE0D3;
+    --soft-shadow: 0 1px 1px rgba(15,46,42,.04), 0 12px 32px -18px rgba(15,46,42,.26);
 
     --sans: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
             "Noto Sans KR", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
@@ -25,29 +25,29 @@
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --paper:#121512; --surface:#1B1F1A; --surface-2:#232821;
-      --ink:#E7EBE4; --ink-2:#B8BFB4; --muted:#87907F; --faint:#5F6A5C;
-      --line:#2F352D; --line-soft:#262B24;
-      --work:#7CBBBF; --work-soft:#1B2C2D;
-      --personal:#DFA469; --personal-soft:#2E2318;
+      --paper:#08120F; --surface:#102420; --surface-2:#173029;
+      --ink:#DFF5EE; --ink-2:#A9C9C0; --muted:#7A9B92; --faint:#587771;
+      --line:#23443C; --line-soft:#1B352F;
+      --work:#34D6BC; --work-soft:#0C332C;
+      --personal:#FF8A5C; --personal-soft:#3A2118;
       --soft-shadow: 0 1px 1px rgba(0,0,0,.4), 0 12px 32px -20px rgba(0,0,0,.8);
     }
   }
   :root[data-theme="dark"] {
-    --paper:#121512; --surface:#1B1F1A; --surface-2:#232821;
-    --ink:#E7EBE4; --ink-2:#B8BFB4; --muted:#87907F; --faint:#5F6A5C;
-    --line:#2F352D; --line-soft:#262B24;
-    --work:#7CBBBF; --work-soft:#1B2C2D;
-    --personal:#DFA469; --personal-soft:#2E2318;
+    --paper:#08120F; --surface:#102420; --surface-2:#173029;
+    --ink:#DFF5EE; --ink-2:#A9C9C0; --muted:#7A9B92; --faint:#587771;
+    --line:#23443C; --line-soft:#1B352F;
+    --work:#34D6BC; --work-soft:#0C332C;
+    --personal:#FF8A5C; --personal-soft:#3A2118;
     --soft-shadow: 0 1px 1px rgba(0,0,0,.4), 0 12px 32px -20px rgba(0,0,0,.8);
   }
   :root[data-theme="light"] {
-    --paper:#E8ECE7; --surface:#FBFCFA; --surface-2:#F1F4EF;
-    --ink:#1F241F; --ink-2:#454D44; --muted:#7B837A; --faint:#A8AFA5;
-    --line:#D7DCD4; --line-soft:#E5E9E2;
-    --work:#35696D; --work-soft:#DCE9E9;
-    --personal:#A96B33; --personal-soft:#F3E7D9;
-    --soft-shadow: 0 1px 1px rgba(31,36,31,.03), 0 10px 30px -18px rgba(31,36,31,.28);
+    --paper:#E1F0E9; --surface:#FFFFFF; --surface-2:#EEF8F3;
+    --ink:#0F2E2A; --ink-2:#37605A; --muted:#6C918A; --faint:#A0C0B7;
+    --line:#CDE6DC; --line-soft:#E1F0EA;
+    --work:#0A8073; --work-soft:#CFF0E8;
+    --personal:#D2481F; --personal-soft:#FFE0D3;
+    --soft-shadow: 0 1px 1px rgba(15,46,42,.04), 0 12px 32px -18px rgba(15,46,42,.26);
   }
 
   body {
@@ -114,8 +114,8 @@
   .app { display:grid; grid-template-columns:352px 1fr; min-height:600px; font-size:13px; }
 
   /* ---- 왼쪽 캘린더 패널 ---- */
-  .calpane { background:var(--surface-2); padding:22px 22px 20px;
-             display:flex; flex-direction:column; gap:20px; }
+  .calpane { background:linear-gradient(170deg, var(--work-soft) 0%, var(--surface-2) 42%);
+             padding:22px 22px 20px; display:flex; flex-direction:column; gap:20px; }
   .brand { display:flex; align-items:center; gap:9px; font-size:15px;
            font-weight:700; letter-spacing:-.02em; }
   .brand .mk { width:18px; height:18px; border-radius:6px; background:var(--work);
@@ -145,8 +145,8 @@
   .day.rest .n { color:var(--personal); }
 
   /* 부담 없는 밀도 표시 — 두 개의 얇은 막대 */
-  .load { display:flex; flex-direction:column; gap:2.5px; align-items:center; width:100%; }
-  .load i { height:2.5px; border-radius:2px; display:block; }
+  .load { display:flex; flex-direction:column; gap:3px; align-items:center; width:100%; }
+  .load i { height:3px; border-radius:99px; display:block; }
   .load i.w { background:var(--work); }
   .load i.p { background:var(--personal); }
   .load i.ghost { background:var(--line); }
@@ -158,7 +158,7 @@
   .legend { background:var(--surface); border-radius:9px; padding:12px 14px;
             font-size:11.5px; color:var(--muted); line-height:1.8; }
   .legend .row { display:flex; align-items:center; gap:8px; }
-  .legend .row i { height:2.5px; border-radius:2px; }
+  .legend .row i { height:3px; border-radius:99px; }
 
   .glance { display:flex; flex-direction:column; gap:8px; }
   .g-row { display:flex; align-items:center; gap:9px; background:var(--surface);
@@ -271,7 +271,8 @@
   .p-cap { font-size:.84rem; color:var(--muted); margin:10px 4px 0; max-width:33ch; line-height:1.65; }
   .p-cap b { color:var(--ink); font-weight:600; }
 
-  .m-cal { padding:6px 14px 12px; background:var(--surface-2); }
+  .m-cal { padding:6px 14px 12px;
+           background:linear-gradient(170deg, var(--work-soft) 0%, var(--surface-2) 70%); }
   .m-caltop { display:flex; align-items:center; gap:8px; padding:6px 4px 10px; }
   .m-caltop .mo { font-size:19px; font-weight:650; letter-spacing:-.03em; }
   .m-caltop .yr { font-size:11px; color:var(--muted); }
@@ -369,7 +370,8 @@
           <span class="strike">현재 시각 라인</span><br>
           <span class="strike">소요 시간 예측 · 드래그 배치</span><br>
           <span class="strike">지연 경고 배지</span><br>
-          <span class="strike">달력 칸 안의 일정 이름</span>
+          <span class="strike">달력 칸 안의 일정 이름</span><br>
+          <span class="strike">아침 · 낮 · 저녁 구분</span>
         </p>
       </div>
       <div class="card">
@@ -379,7 +381,7 @@
           개인 · 업무 두 갈래 구분<br>
           <b>항상 떠 있는 월간 달력</b><br>
           날짜별 · 주간 훑어보기<br>
-          느슨한 순서 (아침 · 낮 · 저녁, 선택사항)<br>
+          순서가 필요하면 손으로 끌어 옮기기<br>
           날짜 없이 담아두는 "언젠가"
         </p>
       </div>
@@ -395,9 +397,9 @@
     <div class="cols c4">
       <div class="card">
         <span class="kicker">01</span>
-        <h3>시간을 묻지 않는다</h3>
-        <p>모든 입력에서 시각은 선택사항입니다. 굳이 넣고 싶으면
-          <b>아침 · 낮 · 저녁</b> 세 칸 중 하나만 고르면 됩니다. 분 단위는 없습니다.</p>
+        <h3>시간이 아예 없다</h3>
+        <p>시각도, 아침·낮·저녁 같은 구간도 없습니다. 순서가 신경 쓰이면
+          <b>목록에서 위로 끌어 올리면</b> 됩니다. 그게 전부입니다.</p>
       </div>
       <div class="card">
         <span class="kicker">02</span>
@@ -414,7 +416,7 @@
       <div class="card">
         <span class="kicker">04</span>
         <h3>구분은 색 + 위치</h3>
-        <p>개인은 왼쪽·주황, 업무는 오른쪽·청록. 색만으로 나누지 않아
+        <p>개인은 왼쪽·탠저린, 업무는 오른쪽·제이드. 색만으로 나누지 않아
           색약이거나 화면이 작아도 자리로 구분됩니다.</p>
       </div>
     </div>
@@ -586,8 +588,7 @@
 
                 <div class="item">
                   <span class="box w"></span>
-                  <span class="tx">스프린트 리뷰 자료 마무리
-                    <span class="sub">오전 중에</span></span>
+                  <span class="tx">스프린트 리뷰 자료 마무리</span>
                   <span class="moved">어제에서</span>
                 </div>
 
@@ -618,8 +619,8 @@
     <p class="note" style="margin-top:16px">
       달력 칸에는 <b>글자가 하나도 없습니다.</b> 날짜 숫자와 얇은 막대 두 줄뿐이라
       한 달을 봐도 빽빽하다는 느낌이 들지 않습니다.<br>
-      할 일에 시각이 붙어도 <b>"오전 중에 · 이번 주 안에 · 내일까지"</b> 같은 말로만 표시합니다 —
-      숫자 시계는 어디에도 없습니다.
+      할 일에 붙는 건 <b>"이번 주 안에 · 내일까지"</b> 같은 날짜뿐입니다 —
+      시계도, 아침·낮·저녁 같은 구간도 없습니다. 순서는 손으로 끌어 정합니다.
     </p>
   </section>
 
@@ -861,7 +862,7 @@
               <div class="item" style="padding:10px 12px">
                 <span class="box w"></span>
                 <span class="tx">스프린트 리뷰 자료 마무리
-                  <span class="sub">업무 · 오전 중에</span></span>
+                  <span class="sub">업무</span></span>
               </div>
               <div class="item" style="padding:10px 12px">
                 <span class="box w"></span>
@@ -928,7 +929,7 @@
               <div class="item" style="padding:10px 12px">
                 <span class="box p"></span>
                 <span class="tx">짐 싸기
-                  <span class="sub">개인 · 전날 저녁</span></span>
+                  <span class="sub">개인</span></span>
               </div>
               <div class="item" style="padding:10px 12px">
                 <span class="box p"></span>
@@ -1073,9 +1074,9 @@
             <td>맨 위에 한 줄로 조용히 모아 <b>옮기기 / 나중에</b> 두 버튼</td>
           </tr>
           <tr>
-            <td class="q">시간을 정하고 싶을 때</td>
-            <td>시:분 선택기</td>
-            <td><b>아침 · 낮 · 저녁</b> 셋 중 하나. 안 골라도 됨</td>
+            <td class="q">순서를 정하고 싶을 때</td>
+            <td>시:분을 지정하게 한다</td>
+            <td>시간 개념이 <b>아예 없다.</b> 목록에서 위로 끌어 올리면 끝</td>
           </tr>
           <tr>
             <td class="q">언제 할지 모를 때</td>
@@ -1102,19 +1103,20 @@
     <div class="band-head">
       <p class="eyebrow">디자인 토큰</p>
       <h2>색과 글자</h2>
-      <p>차분한 세이지 바탕에 청록·황토 두 가지만. 경고용 빨강은 팔레트에 없습니다.</p>
+      <p>맑은 민트 바탕에 <b>제이드</b>와 <b>탠저린</b> 두 가지. 매일 열어도 무겁지 않게
+        채도는 높이되 면적은 좁게 씁니다. 경고용 빨강은 팔레트에 없습니다.</p>
     </div>
     <div class="swrow">
       <div class="swbox"><div class="fill" style="background:var(--personal)"></div>
-        <div class="mt"><b>개인</b>#A96B33</div></div>
+        <div class="mt"><b>개인 · 탠저린</b>#D2481F</div></div>
       <div class="swbox"><div class="fill" style="background:var(--work)"></div>
-        <div class="mt"><b>업무</b>#35696D</div></div>
+        <div class="mt"><b>업무 · 제이드</b>#0A8073</div></div>
       <div class="swbox"><div class="fill" style="background:var(--ink)"></div>
-        <div class="mt"><b>글자 · 오늘</b>#1F241F</div></div>
+        <div class="mt"><b>글자 · 오늘</b>#0F2E2A</div></div>
       <div class="swbox"><div class="fill" style="background:var(--paper)"></div>
-        <div class="mt"><b>바탕</b>#E8ECE7</div></div>
+        <div class="mt"><b>바탕 · 민트</b>#E1F0E9</div></div>
       <div class="swbox"><div class="fill" style="background:var(--faint)"></div>
-        <div class="mt"><b>흐림 · 완료</b>#A8AFA5</div></div>
+        <div class="mt"><b>흐림 · 완료</b>#A0C0B7</div></div>
     </div>
     <div class="cols c3" style="margin-top:14px">
       <div class="card">
@@ -1170,8 +1172,6 @@
           원하시던 느낌인지 먼저 확인하고 싶습니다.</li>
         <li><b>달력 칸의 막대 표시</b> — 지금은 얇은 막대 두 줄입니다.
           점 두 개, 혹은 숫자만 남기는 것도 가능합니다. 어느 쪽이 편한가요?</li>
-        <li><b>"아침 · 낮 · 저녁" 구분이 필요한가요?</b>
-          아예 없어도 된다면 시간 개념을 100% 지울 수 있습니다.</li>
         <li><b>주간 화면(S2)이 필요한가요?</b> 하루 + 달력만으로 충분하다면
           탭을 하나 줄여 더 단순해집니다.</li>
         <li><b>알림</b> — 지금 설계엔 독촉 알림이 없습니다.
