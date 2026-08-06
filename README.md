@@ -13,6 +13,10 @@ npm run build
 npm start                 # http://localhost:4000
 ```
 
+> **Node 22.18 이상**이 필요하다. `.ts` 파일을 빌드 없이 그대로 실행하는 타입 스트리핑과
+> 내장 `node:sqlite` 를 쓰기 때문이다. `package.json` 의 `engines` 로 버전을 못 박지는
+> 않았는데, 배포 환경이 더 높은 Node 를 쓸 때 거절당하기 때문이다.
+
 배포는 **Vercel + Turso** (둘 다 무료 티어). 자세한 순서는 아래 [배포](#배포) 참고.
 
 ---

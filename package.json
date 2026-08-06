@@ -4,9 +4,7 @@
   "private": true,
   "type": "module",
   "description": "하루 — 둘이 같이 쓰는 to-do. 달력이 늘 곁에 있고, 시간표는 없다.",
-  "engines": {
-    "node": "22.x"
-  },
+  "//engines": "Node 22.18 이상이면 된다(.ts 를 그대로 실행하는 타입 스트리핑, node:sqlite). engines 로 버전을 못 박으면 배포 환경이 더 높은 Node 를 쓸 때 거절당하므로 적지 않는다.",
   "workspaces": [
     "server",
     "web"
