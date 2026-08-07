@@ -238,13 +238,15 @@ export const db: Db = {
 // ---------------------------------------------------------------- 마이그레이션
 
 /**
- * user_version 을 보고 필요한 단계만 적용한다.
- * 기존 데이터가 있어도 안전하게 여러 번 실행할 수 있다.
+ * 어디까지 적용했는지 표에 적어두고, 남은 것만 실행한다.
+ *
+ * 예전에는 `PRAGMA user_version` 에 적었는데 Turso 는 그 쓰기를 거부한다
+ * ("SQL not allowed statement"). 그래서 평범한 표를 쓴다 — 어느 SQLite 에서나 된다.
  */
 const MIGRATIONS: string[] = [
   // 1 — 최초 스키마
   `
-  CREATE TABLE users (
+  CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     email         TEXT NOT NULL UNIQUE,
     name          TEXT NOT NULL,
@@ -254,21 +256,21 @@ const MIGRATIONS: string[] = [
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
-  CREATE TABLE spaces (
+  CREATE TABLE IF NOT EXISTS spaces (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
     invite_code TEXT NOT NULL UNIQUE,
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
-  CREATE TABLE memberships (
+  CREATE TABLE IF NOT EXISTS memberships (
     space_id   INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
     user_id    INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     PRIMARY KEY (space_id, user_id)
   );
 
-  CREATE TABLE todos (
+  CREATE TABLE IF NOT EXISTS todos (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     space_id     INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
     owner_id     INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
@@ -287,10 +289,10 @@ const MIGRATIONS: string[] = [
     updated_at   TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
-  CREATE INDEX idx_todos_space_date  ON todos (space_id, date);
-  CREATE INDEX idx_todos_space_owner ON todos (space_id, owner_id);
+  CREATE INDEX IF NOT EXISTS idx_todos_space_date  ON todos (space_id, date);
+  CREATE INDEX IF NOT EXISTS idx_todos_space_owner ON todos (space_id, owner_id);
 
-  CREATE TABLE subtasks (
+  CREATE TABLE IF NOT EXISTS subtasks (
     id       INTEGER PRIMARY KEY AUTOINCREMENT,
     todo_id  INTEGER NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
     title    TEXT    NOT NULL,
@@ -298,7 +300,7 @@ const MIGRATIONS: string[] = [
     position REAL    NOT NULL DEFAULT 0
   );
 
-  CREATE INDEX idx_subtasks_todo ON subtasks (todo_id);
+  CREATE INDEX IF NOT EXISTS idx_subtasks_todo ON subtasks (todo_id);
   `,
 
   // 2 — 변경 감지용 버전. 쓰기가 일어날 때마다 1씩 올린다.
@@ -309,11 +311,41 @@ const MIGRATIONS: string[] = [
 ];
 
 async function runMigrations(instance: Db): Promise<void> {
-  const row = await instance.get<{ user_version: number }>('PRAGMA user_version');
-  const version = row?.user_version ?? 0;
+  await instance.exec(
+    'CREATE TABLE IF NOT EXISTS schema_migrations (' +
+      'version INTEGER PRIMARY KEY, ' +
+      "applied_at TEXT NOT NULL DEFAULT (datetime('now')))",
+  );
 
-  for (let i = version; i < MIGRATIONS.length; i++) {
-    await instance.exec(MIGRATIONS[i]!);
-    await instance.exec(`PRAGMA user_version = ${i + 1}`);
+  let applied = await appliedCount(instance);
+
+  // 기록은 없는데 이미 만들어진 DB — 몇 단계까지 적용됐는지 적어두고 이어서 간다.
+  for (let i = 1; i <= applied; i++) {
+    await instance.run('INSERT OR IGNORE INTO schema_migrations (version) VALUES (?)', [i]);
   }
+
+  for (let i = applied; i < MIGRATIONS.length; i++) {
+    await instance.exec(MIGRATIONS[i]!);
+    await instance.run('INSERT OR IGNORE INTO schema_migrations (version) VALUES (?)', [i + 1]);
+    applied = i + 1;
+  }
+}
+
+/**
+ * 어디까지 적용됐는지 알아낸다.
+ *
+ * 기록이 없으면 스키마를 직접 들여다본다. 예전 버전으로 만들어진 DB 나,
+ * 표는 만들어졌는데 기록을 남기다 실패한 DB 도 이어서 진행할 수 있어야 한다.
+ */
+async function appliedCount(instance: Db): Promise<number> {
+  const rows = await instance.all<{ version: number }>('SELECT version FROM schema_migrations');
+  if (rows.length) return Math.max(...rows.map((r) => Number(r.version)));
+
+  const spaces = await instance.get<{ sql: string }>(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'spaces'",
+  );
+  if (!spaces?.sql) return 0;
+  // ALTER TABLE ADD COLUMN 은 sqlite_master 의 정의문에 그대로 반영된다.
+  // 여기서 가릴 수 있는 것은 2 단계까지다. 이후 단계는 표에 기록이 남으므로 이 길로 오지 않는다.
+  return /\bversion\b/.test(spaces.sql) ? 2 : 1;
 }

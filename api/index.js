@@ -165,7 +165,7 @@ var db = {
 var MIGRATIONS = [
   // 1 — 최초 스키마
   `
-  CREATE TABLE users (
+  CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     email         TEXT NOT NULL UNIQUE,
     name          TEXT NOT NULL,
@@ -175,21 +175,21 @@ var MIGRATIONS = [
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
-  CREATE TABLE spaces (
+  CREATE TABLE IF NOT EXISTS spaces (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
     invite_code TEXT NOT NULL UNIQUE,
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
-  CREATE TABLE memberships (
+  CREATE TABLE IF NOT EXISTS memberships (
     space_id   INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
     user_id    INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     PRIMARY KEY (space_id, user_id)
   );
 
-  CREATE TABLE todos (
+  CREATE TABLE IF NOT EXISTS todos (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     space_id     INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
     owner_id     INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
@@ -208,10 +208,10 @@ var MIGRATIONS = [
     updated_at   TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
-  CREATE INDEX idx_todos_space_date  ON todos (space_id, date);
-  CREATE INDEX idx_todos_space_owner ON todos (space_id, owner_id);
+  CREATE INDEX IF NOT EXISTS idx_todos_space_date  ON todos (space_id, date);
+  CREATE INDEX IF NOT EXISTS idx_todos_space_owner ON todos (space_id, owner_id);
 
-  CREATE TABLE subtasks (
+  CREATE TABLE IF NOT EXISTS subtasks (
     id       INTEGER PRIMARY KEY AUTOINCREMENT,
     todo_id  INTEGER NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
     title    TEXT    NOT NULL,
@@ -219,7 +219,7 @@ var MIGRATIONS = [
     position REAL    NOT NULL DEFAULT 0
   );
 
-  CREATE INDEX idx_subtasks_todo ON subtasks (todo_id);
+  CREATE INDEX IF NOT EXISTS idx_subtasks_todo ON subtasks (todo_id);
   `,
   // 2 — 변경 감지용 버전. 쓰기가 일어날 때마다 1씩 올린다.
   //     화면은 이 숫자만 물어보고, 바뀌었을 때만 전체를 다시 불러온다.
@@ -228,12 +228,27 @@ var MIGRATIONS = [
   `
 ];
 async function runMigrations(instance) {
-  const row = await instance.get("PRAGMA user_version");
-  const version = row?.user_version ?? 0;
-  for (let i = version; i < MIGRATIONS.length; i++) {
-    await instance.exec(MIGRATIONS[i]);
-    await instance.exec(`PRAGMA user_version = ${i + 1}`);
+  await instance.exec(
+    "CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now')))"
+  );
+  let applied = await appliedCount(instance);
+  for (let i = 1; i <= applied; i++) {
+    await instance.run("INSERT OR IGNORE INTO schema_migrations (version) VALUES (?)", [i]);
   }
+  for (let i = applied; i < MIGRATIONS.length; i++) {
+    await instance.exec(MIGRATIONS[i]);
+    await instance.run("INSERT OR IGNORE INTO schema_migrations (version) VALUES (?)", [i + 1]);
+    applied = i + 1;
+  }
+}
+async function appliedCount(instance) {
+  const rows = await instance.all("SELECT version FROM schema_migrations");
+  if (rows.length) return Math.max(...rows.map((r) => Number(r.version)));
+  const spaces = await instance.get(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'spaces'"
+  );
+  if (!spaces?.sql) return 0;
+  return /\bversion\b/.test(spaces.sql) ? 2 : 1;
 }
 
 // server/src/routes/auth.ts
