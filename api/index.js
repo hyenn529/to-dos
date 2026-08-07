@@ -10,7 +10,11 @@ import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 var here = dirname(fileURLToPath(import.meta.url));
-var tursoUrl = process.env.TURSO_DATABASE_URL;
+function env(name) {
+  const value = process.env[name]?.trim().replace(/^['"]|['"]$/g, "");
+  return value ? value : void 0;
+}
+var tursoUrl = env("TURSO_DATABASE_URL");
 async function createLocalDb() {
   const { DatabaseSync } = await import("node:sqlite");
   const path = process.env.HARU_DB_PATH ?? resolve(here, "../../data/haru.db");
@@ -48,7 +52,7 @@ async function createLocalDb() {
 }
 async function createTursoDb(url) {
   const { createClient } = await import("@libsql/client/web");
-  const client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  const client = createClient({ url, authToken: env("TURSO_AUTH_TOKEN") });
   return {
     async all(sql, params = []) {
       const result = await client.execute({ sql, args: params });
@@ -105,12 +109,12 @@ function configError(message) {
 }
 async function connect() {
   if (tursoUrl) {
-    if (!process.env.TURSO_AUTH_TOKEN) {
+    if (!env("TURSO_AUTH_TOKEN")) {
       throw configError("TURSO_DATABASE_URL \uC740 \uC788\uB294\uB370 TURSO_AUTH_TOKEN \uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");
     }
-    if (!/^(libsql|https?|wss?):\/\//.test(tursoUrl)) {
+    if (!/^(libsql|https?|wss?):\/\/[^\s/]+$/.test(tursoUrl)) {
       throw configError(
-        `TURSO_DATABASE_URL \uD615\uC2DD\uC774 \uC774\uC0C1\uD569\uB2C8\uB2E4. libsql:// \uB85C \uC2DC\uC791\uD574\uC57C \uD569\uB2C8\uB2E4 (\uC9C0\uAE08: "${tursoUrl.slice(0, 16)}\u2026").`
+        `TURSO_DATABASE_URL \uD615\uC2DD\uC774 \uC774\uC0C1\uD569\uB2C8\uB2E4 \u2014 \uBC1B\uC740 \uAC12: "${tursoUrl}". libsql://\uC774\uB984-\uACC4\uC815.turso.io \uCC98\uB7FC \uD55C \uC904\uC774\uC5B4\uC57C \uD558\uACE0, \uACF5\uBC31\uC774\uB098 \uACBD\uB85C\uAC00 \uBD99\uC73C\uBA74 \uC548 \uB429\uB2C8\uB2E4.`
       );
     }
     return createTursoDb(tursoUrl);
@@ -238,19 +242,22 @@ import {
 } from "node:crypto";
 var SESSION_COOKIE = "haru_session";
 var SESSION_TTL_MS = 1e3 * 60 * 60 * 24 * 60;
-var SECRET = (() => {
-  const fromEnv = process.env.HARU_SECRET;
-  if (fromEnv && fromEnv.length >= 16) return fromEnv;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "HARU_SECRET \uD658\uACBD\uBCC0\uC218\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. 16\uC790 \uC774\uC0C1\uC758 \uC784\uC758 \uBB38\uC790\uC5F4\uC744 \uC9C0\uC815\uD558\uC138\uC694."
+var cachedSecret = null;
+function secret() {
+  if (cachedSecret) return cachedSecret;
+  const fromEnv = process.env.HARU_SECRET?.trim().replace(/^['"]|['"]$/g, "");
+  if (fromEnv && fromEnv.length >= 16) return cachedSecret = fromEnv;
+  if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+    throw Object.assign(
+      new Error("HARU_SECRET \uD658\uACBD\uBCC0\uC218\uAC00 \uC5C6\uAC70\uB098 16\uC790\uBCF4\uB2E4 \uC9E7\uC2B5\uB2C8\uB2E4. \uAE34 \uC784\uC758 \uBB38\uC790\uC5F4\uC744 \uC9C0\uC815\uD558\uC138\uC694."),
+      { expose: true }
     );
   }
   console.warn(
     "[haru] HARU_SECRET \uC774 \uC5C6\uC5B4 \uC784\uC2DC \uD0A4\uB97C \uC0AC\uC6A9\uD569\uB2C8\uB2E4 \u2014 \uC11C\uBC84\uB97C \uC7AC\uC2DC\uC791\uD558\uBA74 \uB85C\uADF8\uC778\uC774 \uD480\uB9BD\uB2C8\uB2E4."
   );
-  return randomBytes(32).toString("hex");
-})();
+  return cachedSecret = randomBytes(32).toString("hex");
+}
 function hashPassword(password) {
   const salt = randomBytes(16).toString("hex");
   const hash = scryptSync(password, salt, 64).toString("hex");
@@ -263,7 +270,7 @@ function verifyPassword(password, hash, salt) {
   return timingSafeEqual(candidate, expected);
 }
 function sign(value) {
-  return createHmac("sha256", SECRET).update(value).digest("base64url");
+  return createHmac("sha256", secret()).update(value).digest("base64url");
 }
 function makeToken(userId) {
   const body = `${userId}.${Date.now()}`;

@@ -33,10 +33,20 @@ export type Db = {
 const here = dirname(fileURLToPath(import.meta.url));
 
 /**
+ * 배포 화면에 붙여넣은 값에는 앞뒤 공백, 줄바꿈, 감싸는 따옴표가 섞여 들어오기 쉽다.
+ * 눈에는 안 보이는데 `new URL()` 은 그걸로 바로 실패한다 ("Invalid URL").
+ * 사람이 못 찾을 실수이므로 코드가 다듬는다.
+ */
+function env(name: string): string | undefined {
+  const value = process.env[name]?.trim().replace(/^['"]|['"]$/g, '');
+  return value ? value : undefined;
+}
+
+/**
  * TURSO_DATABASE_URL 이 있으면 Turso, 없으면 로컬 파일.
  * 이 한 줄이 "어디에 저장되는가"를 가른다.
  */
-const tursoUrl = process.env.TURSO_DATABASE_URL;
+const tursoUrl = env('TURSO_DATABASE_URL');
 
 async function createLocalDb(): Promise<Db> {
   const { DatabaseSync } = await import('node:sqlite');
@@ -79,7 +89,7 @@ async function createLocalDb(): Promise<Db> {
 
 async function createTursoDb(url: string): Promise<Db> {
   const { createClient } = await import('@libsql/client/web');
-  const client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  const client = createClient({ url, authToken: env('TURSO_AUTH_TOKEN') });
 
   return {
     async all<T>(sql, params = []) {
@@ -152,12 +162,14 @@ function configError(message: string): Error {
 
 async function connect(): Promise<Db> {
   if (tursoUrl) {
-    if (!process.env.TURSO_AUTH_TOKEN) {
+    if (!env('TURSO_AUTH_TOKEN')) {
       throw configError('TURSO_DATABASE_URL 은 있는데 TURSO_AUTH_TOKEN 이 없습니다.');
     }
-    if (!/^(libsql|https?|wss?):\/\//.test(tursoUrl)) {
+    // 왜 틀렸는지 보이게 한다. 주소는 비밀이 아니므로 그대로 보여줘도 된다.
+    if (!/^(libsql|https?|wss?):\/\/[^\s/]+$/.test(tursoUrl)) {
       throw configError(
-        `TURSO_DATABASE_URL 형식이 이상합니다. libsql:// 로 시작해야 합니다 (지금: "${tursoUrl.slice(0, 16)}…").`,
+        `TURSO_DATABASE_URL 형식이 이상합니다 — 받은 값: "${tursoUrl}". ` +
+          'libsql://이름-계정.turso.io 처럼 한 줄이어야 하고, 공백이나 경로가 붙으면 안 됩니다.',
       );
     }
     return createTursoDb(tursoUrl);

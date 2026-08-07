@@ -15,19 +15,25 @@ const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 60; // 60일
  * 서명 키. 배포 시 HARU_SECRET 을 반드시 지정한다.
  * 지정하지 않으면 임시 키를 만들어 쓰고 경고하며, 재시작하면 모든 세션이 끊긴다.
  */
-const SECRET = (() => {
-  const fromEnv = process.env.HARU_SECRET;
-  if (fromEnv && fromEnv.length >= 16) return fromEnv;
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'HARU_SECRET 환경변수가 없습니다. 16자 이상의 임의 문자열을 지정하세요.',
+let cachedSecret: string | null = null;
+
+function secret(): string {
+  if (cachedSecret) return cachedSecret;
+  // 붙여넣기로 들어온 앞뒤 공백·따옴표는 없는 셈 친다.
+  const fromEnv = process.env.HARU_SECRET?.trim().replace(/^['"]|['"]$/g, '');
+  if (fromEnv && fromEnv.length >= 16) return (cachedSecret = fromEnv);
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    // 모듈을 읽는 순간이 아니라 쓸 때 던진다 — 그래야 이유가 응답에 담긴다.
+    throw Object.assign(
+      new Error('HARU_SECRET 환경변수가 없거나 16자보다 짧습니다. 긴 임의 문자열을 지정하세요.'),
+      { expose: true },
     );
   }
   console.warn(
     '[haru] HARU_SECRET 이 없어 임시 키를 사용합니다 — 서버를 재시작하면 로그인이 풀립니다.',
   );
-  return randomBytes(32).toString('hex');
-})();
+  return (cachedSecret = randomBytes(32).toString('hex'));
+}
 
 // ---------------------------------------------------------------- 비밀번호
 
@@ -47,7 +53,7 @@ export function verifyPassword(password: string, hash: string, salt: string): bo
 // ---------------------------------------------------------------- 세션 쿠키
 
 function sign(value: string): string {
-  return createHmac('sha256', SECRET).update(value).digest('base64url');
+  return createHmac('sha256', secret()).update(value).digest('base64url');
 }
 
 function makeToken(userId: number): string {
