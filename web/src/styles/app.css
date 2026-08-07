@@ -102,6 +102,30 @@ ul {
   letter-spacing: -0.02em;
 }
 
+/* 아바타와 톱니바퀴를 감싼 버튼. 이게 설정으로 들어가는 문이다. */
+.pane__settings {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 7px 4px 5px;
+  border-radius: 99px;
+  color: var(--ink-2);
+  background: transparent;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+.pane__settings:hover,
+.pane__settings:focus-visible {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.pane__settings svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
 .pane__mark {
   position: relative;
   width: 18px;
@@ -354,6 +378,18 @@ ul {
 .chips--mobile {
   display: none;
   margin-left: 0;
+}
+
+/* 보기 칩과 한 줄에 있지만 성격이 다르다 — 사이를 띄우고 테두리로 구분한다. */
+.chips button.chips__settings {
+  margin-left: 6px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+}
+.chips button.chips__settings:hover {
+  background: var(--surface-2);
+  color: var(--ink);
 }
 
 /*

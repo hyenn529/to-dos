@@ -65,6 +65,7 @@ export function App() {
     <div className="shell">
       <CalendarPane
         collapsed={narrow && calCollapsed}
+        onOpenSettings={() => setSettingsOpen(true)}
         {...(narrow ? { onToggleCollapse: () => setCalCollapsed((v) => !v) } : {})}
       />
 
@@ -87,8 +88,14 @@ export function App() {
                 {item.label}
               </button>
             ))}
-            <button type="button" onClick={() => setSettingsOpen(true)}>
-              우리
+            {/* 보기 칩이 아니다. 같은 줄에 있으면 네 번째 화면처럼 보이므로 따로 떼어 둔다. */}
+            <button
+              type="button"
+              className="chips__settings"
+              onClick={() => setSettingsOpen(true)}
+              title="설정 · 초대 코드"
+            >
+              <span aria-hidden="true">⚙</span> 우리
             </button>
           </nav>
         </header>

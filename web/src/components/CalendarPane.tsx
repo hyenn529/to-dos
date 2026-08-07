@@ -41,12 +41,31 @@ function Bars({ load }: { load: DayLoad | undefined }) {
  * 좁은 화면에서는 위쪽에 붙어 따라다니며, 접으면 이번 주 한 줄만 남는다 —
  * 사라지지는 않는다.
  */
+/** 톱니바퀴. 선만으로 그려서 어느 테마에서나 글자색을 따라간다. */
+function GearIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="3.1" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M19.1 14.4a1.4 1.4 0 0 0 .3 1.6l.1.1a1.7 1.7 0 1 1-2.4 2.4l-.1-.1a1.4 1.4 0 0 0-1.6-.3 1.4 1.4 0 0 0-.9 1.3v.2a1.7 1.7 0 1 1-3.4 0v-.1a1.4 1.4 0 0 0-.9-1.3 1.4 1.4 0 0 0-1.6.3l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.4 1.4 0 0 0 .3-1.6 1.4 1.4 0 0 0-1.3-.9h-.2a1.7 1.7 0 1 1 0-3.4h.1a1.4 1.4 0 0 0 1.3-.9 1.4 1.4 0 0 0-.3-1.6l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.4 1.4 0 0 0 1.6.3h.1a1.4 1.4 0 0 0 .9-1.3v-.2a1.7 1.7 0 1 1 3.4 0v.1a1.4 1.4 0 0 0 .9 1.3 1.4 1.4 0 0 0 1.6-.3l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.4 1.4 0 0 0-.3 1.6v.1a1.4 1.4 0 0 0 1.3.9h.2a1.7 1.7 0 1 1 0 3.4h-.1a1.4 1.4 0 0 0-1.3.9Z"
+      />
+    </svg>
+  );
+}
+
 export function CalendarPane({
   collapsed = false,
   onToggleCollapse,
+  onOpenSettings,
 }: {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  onOpenSettings?: () => void;
 }) {
   const { me, month, selected, load, view, selectDate, stepMonth, goToday, bucketName } =
     useStore();
@@ -60,9 +79,19 @@ export function CalendarPane({
       <header className="pane__brand">
         <span className="pane__mark" aria-hidden="true" />
         <span className="pane__title">하루</span>
-        {me ? (
-          <AvatarPair mine={me.user.initial} partner={me.partner?.initial ?? null} />
-        ) : null}
+        {/* 아바타와 톱니바퀴가 한 버튼이다 — 어느 쪽을 눌러도 설정이 열린다. */}
+        <button
+          type="button"
+          className="pane__settings"
+          onClick={onOpenSettings}
+          aria-label="설정 · 초대 코드"
+          title="설정 · 초대 코드"
+        >
+          {me ? (
+            <AvatarPair mine={me.user.initial} partner={me.partner?.initial ?? null} />
+          ) : null}
+          <GearIcon />
+        </button>
       </header>
 
       <section className="cal">
