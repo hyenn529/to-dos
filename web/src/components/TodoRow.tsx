@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../lib/api.ts';
 import * as d from '../lib/dates.ts';
+import { DRAG_TYPE, moveFields, spanOf } from '../lib/move.ts';
 import { useStore } from '../lib/store.tsx';
 import type { Todo } from '../lib/types.ts';
 import { Avatar } from './Avatar.tsx';
@@ -33,6 +34,11 @@ export function TodoRow({ todo, compact = false }: { todo: Todo; compact?: boole
   const partnerInitial = me?.partner?.initial ?? '?';
   const myInitial = me?.user.initial ?? '?';
 
+  const span = spanOf(todo.date, todo.endDate);
+  /** 다른 날로 옮기기. 여러 날짜리면 기간을 유지한 채 통째로 민다. */
+  const moveTo = (next: string | null) =>
+    run(() => api.update(todo.id, moveFields(next, span)));
+
   const meta: string[] = [];
   if (todo.endDate && todo.endDate !== todo.date) {
     const span = d.daysFromToday(todo.date!) > 0 ? `${d.daysFromToday(todo.date!)}일 뒤 시작` : null;
@@ -57,10 +63,18 @@ export function TodoRow({ todo, compact = false }: { todo: Todo; compact?: boole
     </span>
   ) : null;
 
+  // 달력 칸으로 끌어다 놓으면 그 날로 옮겨진다. 손가락으로는 되지 않으므로
+  // 아래 '날짜' 고르기가 본 길이고, 끌어놓기는 마우스에서의 지름길이다.
   return (
     <li
       className={`row${done ? ' is-done' : ''}${compact ? ' row--compact' : ''}`}
       data-bucket={todo.bucket}
+      draggable={todo.canEdit || undefined}
+      onDragStart={(event) => {
+        if (!todo.canEdit) return;
+        event.dataTransfer.setData(DRAG_TYPE, JSON.stringify({ id: todo.id, span }));
+        event.dataTransfer.effectAllowed = 'move';
+      }}
     >
       <div className="row__main">
         {todo.canCheck ? (
@@ -168,18 +182,25 @@ export function TodoRow({ todo, compact = false }: { todo: Todo; compact?: boole
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    run(() => api.update(todo.id, { date: d.addDays(todo.date ?? d.today(), 1) }))
-                  }
+                  onClick={() => moveTo(d.addDays(todo.date ?? d.today(), 1))}
                   disabled={todo.date === null}
                 >
                   내일로
                 </button>
-                <button
-                  type="button"
-                  onClick={() => run(() => api.update(todo.id, { date: null, endDate: null }))}
-                  disabled={todo.date === null}
-                >
+                {/* 아무 날로나. 달력을 띄우는 건 기기가 하므로 폰에서도 그대로 된다. */}
+                <label className="row__pick">
+                  날짜
+                  <input
+                    type="date"
+                    value={todo.date ?? ''}
+                    aria-label="다른 날짜로 옮기기"
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      if (next) void moveTo(next);
+                    }}
+                  />
+                </label>
+                <button type="button" onClick={() => moveTo(null)} disabled={todo.date === null}>
                   언젠가로
                 </button>
                 <button

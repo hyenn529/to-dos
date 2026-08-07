@@ -131,3 +131,8 @@ export function relativeLabel(key: string): string {
   if (diff < -1 && diff >= -6) return `지난 ${weekdayLabel(key)}요일`;
   return `${Number(key.slice(5, 7))}월 ${Number(key.slice(8, 10))}일`;
 }
+
+/** 두 날짜 사이의 날 수. b 가 뒤면 양수. */
+export function daysBetween(a: string, b: string): number {
+  return Math.round((fromKey(b).getTime() - fromKey(a).getTime()) / 86_400_000);
+}

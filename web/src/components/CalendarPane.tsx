@@ -1,4 +1,7 @@
+import { type DragEvent, useState } from 'react';
+import { api } from '../lib/api.ts';
 import * as d from '../lib/dates.ts';
+import { DRAG_TYPE, moveFields, type DragPayload } from '../lib/move.ts';
 import { useStore } from '../lib/store.tsx';
 import type { Bucket, DayLoad } from '../lib/types.ts';
 import { AvatarPair } from './Avatar.tsx';
@@ -34,13 +37,6 @@ function Bars({ load }: { load: DayLoad | undefined }) {
   );
 }
 
-/**
- * 늘 화면에 있는 월간 달력.
- *
- * 칸 안에 글자는 날짜 숫자뿐이고, 그날의 양은 얇은 막대로만 보여준다.
- * 좁은 화면에서는 위쪽에 붙어 따라다니며, 접으면 이번 주 한 줄만 남는다 —
- * 사라지지는 않는다.
- */
 /** 톱니바퀴. 선만으로 그려서 어느 테마에서나 글자색을 따라간다. */
 function GearIcon() {
   return (
@@ -58,6 +54,13 @@ function GearIcon() {
   );
 }
 
+/**
+ * 늘 화면에 있는 월간 달력.
+ *
+ * 칸 안에 글자는 날짜 숫자뿐이고, 그날의 양은 얇은 막대로만 보여준다.
+ * 좁은 화면에서는 위쪽에 붙어 따라다니며, 접으면 이번 주 한 줄만 남는다 —
+ * 사라지지는 않는다.
+ */
 export function CalendarPane({
   collapsed = false,
   onToggleCollapse,
@@ -67,8 +70,45 @@ export function CalendarPane({
   onToggleCollapse?: () => void;
   onOpenSettings?: () => void;
 }) {
-  const { me, month, selected, load, view, selectDate, stepMonth, goToday, bucketName } =
-    useStore();
+  const {
+    me,
+    month,
+    selected,
+    load,
+    view,
+    selectDate,
+    stepMonth,
+    goToday,
+    bucketName,
+    refresh,
+    notify,
+  } = useStore();
+  // 지금 손이 올라와 있는 칸. 어디에 놓이는지 보이지 않으면 끌어놓기는 도박이 된다.
+  const [over, setOver] = useState<string | null>(null);
+
+  const read = (event: DragEvent): DragPayload | null => {
+    const raw = event.dataTransfer.getData(DRAG_TYPE);
+    if (!raw) return null;
+    try {
+      const value = JSON.parse(raw) as DragPayload;
+      return typeof value?.id === 'number' ? value : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const drop = async (event: DragEvent, key: string) => {
+    const payload = read(event);
+    setOver(null);
+    if (!payload) return;
+    event.preventDefault();
+    try {
+      await api.update(payload.id, moveFields(key, payload.span ?? 0));
+      await refresh();
+    } catch (err) {
+      notify(err instanceof Error ? err.message : '옮기지 못했습니다.');
+    }
+  };
 
   const days = collapsed ? d.weekOf(selected) : d.monthGrid(month);
   const today = d.today();
@@ -133,6 +173,7 @@ export function CalendarPane({
             if (key === selected) classes.push('is-selected');
             if (week?.has(key)) classes.push('is-inweek');
             if (d.weekdayIndex(key) === 0) classes.push('is-sunday');
+            if (key === over) classes.push('is-drop');
 
             return (
               <button
@@ -142,6 +183,14 @@ export function CalendarPane({
                 aria-current={key === today ? 'date' : undefined}
                 aria-label={d.longLabel(key)}
                 onClick={() => selectDate(key)}
+                onDragOver={(event) => {
+                  if (!event.dataTransfer.types.includes(DRAG_TYPE)) return;
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = 'move';
+                  setOver(key);
+                }}
+                onDragLeave={() => setOver((v) => (v === key ? null : v))}
+                onDrop={(event) => void drop(event, key)}
               >
                 <span className="cal__num">{d.dayNumber(key)}</span>
                 <Bars load={load.get(key)} />
