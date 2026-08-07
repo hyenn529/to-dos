@@ -123,6 +123,25 @@ export async function findSpaceForUser(userId: number): Promise<Space | null> {
   return row ? { ...row } : null;
 }
 
+/**
+ * 공간 안에서 이 사람의 **자리**.
+ *
+ * 색은 보는 사람이 아니라 사람에게 붙어야 한다 — 혜인은 어느 화면에서나 보라,
+ * 민우는 어느 화면에서나 파랑. 그러려면 "누가 첫 번째인가"가 고정되어야 하므로
+ * 공간을 만든 사람을 a, 나중에 들어온 사람을 b 로 둔다.
+ * 같은 초에 가입해도 순서가 흔들리지 않도록 id 로 한 번 더 가른다.
+ */
+export async function findSeat(spaceId: number, userId: number): Promise<'a' | 'b'> {
+  const row = await db.get<{ user_id: number }>(
+    `SELECT user_id FROM memberships
+      WHERE space_id = ?
+      ORDER BY created_at, user_id
+      LIMIT 1`,
+    [spaceId],
+  );
+  return row?.user_id === userId ? 'a' : 'b';
+}
+
 /** 같은 공간의 다른 한 사람. 아직 아무도 안 들어왔으면 null. */
 export async function findPartner(
   spaceId: number,
@@ -147,6 +166,7 @@ declare module 'express-serve-static-core' {
     user?: PublicUser;
     space?: Space;
     partner?: PublicUser | null;
+    seat?: 'a' | 'b';
   }
 }
 
@@ -178,6 +198,7 @@ export async function requireAuth(
   req.user = user;
   req.space = space;
   req.partner = await findPartner(space.id, user.id);
+  req.seat = await findSeat(space.id, user.id);
   next();
 }
 

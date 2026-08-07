@@ -341,6 +341,16 @@ async function findSpaceForUser(userId) {
   );
   return row ? { ...row } : null;
 }
+async function findSeat(spaceId, userId) {
+  const row = await db.get(
+    `SELECT user_id FROM memberships
+      WHERE space_id = ?
+      ORDER BY created_at, user_id
+      LIMIT 1`,
+    [spaceId]
+  );
+  return row?.user_id === userId ? "a" : "b";
+}
 async function findPartner(spaceId, userId) {
   const row = await db.get(
     `SELECT u.id, u.email, u.name, u.initial
@@ -373,6 +383,7 @@ async function requireAuth(req, res, next) {
   req.user = user;
   req.space = space;
   req.partner = await findPartner(space.id, user.id);
+  req.seat = await findSeat(space.id, user.id);
   next();
 }
 function generateInviteCode() {
@@ -492,13 +503,19 @@ authRouter.get("/me", requireAuth, (req, res) => {
   res.json({
     user: req.user,
     space: req.space,
-    partner: req.partner
+    partner: req.partner,
+    seat: req.seat
   });
 });
 async function sessionPayload(userId) {
   const user = await findUserById(userId);
   const space = await findSpaceForUser(userId);
-  return { user, space, partner: space ? await findPartner(space.id, userId) : null };
+  return {
+    user,
+    space,
+    partner: space ? await findPartner(space.id, userId) : null,
+    seat: space ? await findSeat(space.id, userId) : "a"
+  };
 }
 
 // server/src/routes/space.ts

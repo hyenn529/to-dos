@@ -115,6 +115,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // 색은 사람에게 고정된다 — 자리(a/b)를 문서에 붙여 두면 팔레트가 알아서 맞춰진다.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (me) root.setAttribute('data-seat', me.seat);
+    else root.removeAttribute('data-seat');
+  }, [me]);
+
   useEffect(() => {
     void refresh();
   }, [refresh]);

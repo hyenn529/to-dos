@@ -35,7 +35,7 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--partner-ink);
+  outline: 2px solid var(--seat-b-ink);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -84,8 +84,8 @@ ul {
   overflow-y: auto;
   background: linear-gradient(
     168deg,
-    var(--partner-soft) 0%,
-    var(--mine-soft) 46%,
+    var(--seat-b-soft) 0%,
+    var(--seat-a-soft) 46%,
     var(--surface-2) 100%
   );
 }
@@ -131,7 +131,7 @@ ul {
   width: 18px;
   height: 18px;
   border-radius: 6px;
-  background: var(--partner);
+  background: var(--seat-b);
   flex: 0 0 auto;
 }
 .pane__mark::after {
@@ -142,7 +142,7 @@ ul {
   width: 12px;
   height: 12px;
   border-radius: 4px;
-  background: var(--mine);
+  background: var(--seat-a);
 }
 
 .pane__today {
@@ -201,7 +201,7 @@ ul {
   letter-spacing: 0.08em;
 }
 .cal__weekdays .is-sunday {
-  color: var(--mine-ink);
+  color: var(--seat-a-ink);
 }
 
 /* 높이를 고정한다 — 막대가 생겼다 없어졌다 하면서 격자가 흔들리면 안 된다. */
@@ -228,7 +228,7 @@ ul {
   color: var(--ink-2);
 }
 .cal__day.is-sunday .cal__num {
-  color: var(--mine-ink);
+  color: var(--seat-a-ink);
 }
 .cal__day.is-outside .cal__num {
   color: var(--faint);
@@ -916,7 +916,7 @@ ul {
 }
 .week__col.is-rest .week__dow,
 .week__col.is-rest .week__num {
-  color: var(--mine-ink);
+  color: var(--seat-a-ink);
 }
 .week__list {
   display: flex;
@@ -939,8 +939,8 @@ ul {
   padding: 24px;
   background: linear-gradient(
     168deg,
-    var(--partner-soft) 0%,
-    var(--mine-soft) 50%,
+    var(--seat-b-soft) 0%,
+    var(--seat-a-soft) 50%,
     var(--paper) 100%
   );
 }

@@ -15,9 +15,14 @@
  *   기본 값   : 막대·체크박스 테두리 같은 '표시'
  *   -ink 값   : 글자 (연한 색을 그대로 글자에 쓰면 흰 배경에서 읽히지 않는다)
  *
- * 갈래는 사람 이름이 아니라 보는 사람 기준의 자리다.
- *   mine / mineWork       = 나의 개인 / 업무
- *   partner / partnerWork = 상대의 개인 / 업무
+ * 색은 **사람에게 고정**된다. 공간을 만든 사람이 a(보라), 나중에 들어온 사람이 b(파랑) —
+ * 누구 화면에서 보든 혜인은 보라고 민우는 파랑이다. 색이 화면마다 뒤집히면
+ * "이 보라가 누구였더라"를 매번 다시 읽어야 한다.
+ *
+ * 자리 배치는 반대로 보는 사람 기준이다. 내 칸이 늘 왼쪽에 온다.
+ *   mine / mineWork       = 나의 개인 / 업무   (자리)
+ *   partner / partnerWork = 상대의 개인 / 업무 (자리)
+ * 그래서 아래에서 자리 이름에 seat 색을 연결하고, b 인 사람은 그 연결만 뒤집는다.
  */
 
 :root {
@@ -31,23 +36,23 @@
   --line: #d4e0f1;
   --line-soft: #e5edf8;
 
-  /* 보라 계열 — 나 */
-  --mine: #b49bf5;
-  --mine-ink: #7b5ad6;
-  --mine-soft: #efe9fe;
+  /* 보라 계열 — 먼저 온 사람 */
+  --seat-a: #b49bf5;
+  --seat-a-ink: #7b5ad6;
+  --seat-a-soft: #efe9fe;
 
-  --mineWork: #7c3aed;
-  --mineWork-ink: #5b21b6;
-  --mineWork-soft: #e7dcfd;
+  --seat-a-work: #7c3aed;
+  --seat-a-work-ink: #5b21b6;
+  --seat-a-work-soft: #e7dcfd;
 
-  /* 파랑 계열 — 상대 */
-  --partner: #7fc8f5;
-  --partner-ink: #17699f;
-  --partner-soft: #e0f1fd;
+  /* 파랑 계열 — 나중에 들어온 사람 */
+  --seat-b: #7fc8f5;
+  --seat-b-ink: #17699f;
+  --seat-b-soft: #e0f1fd;
 
-  --partnerWork: #1d6fd4;
-  --partnerWork-ink: #114e96;
-  --partnerWork-soft: #dce9fa;
+  --seat-b-work: #1d6fd4;
+  --seat-b-work-ink: #114e96;
+  --seat-b-work-soft: #dce9fa;
 
   /* 시스템 오류 전용. 갈래 색과 겹치지 않게 따로 둔다 — 할 일에는 쓰이지 않는다. */
   --alert-ink: #b03a54;
@@ -82,21 +87,21 @@
     --line: #2a3550;
     --line-soft: #212b42;
 
-    --mine: #c9b4fb;
-    --mine-ink: #d5c4fc;
-    --mine-soft: #241c3d;
+    --seat-a: #c9b4fb;
+    --seat-a-ink: #d5c4fc;
+    --seat-a-soft: #241c3d;
 
-    --mineWork: #9f6bff;
-    --mineWork-ink: #be9bff;
-    --mineWork-soft: #241a3f;
+    --seat-a-work: #9f6bff;
+    --seat-a-work-ink: #be9bff;
+    --seat-a-work-soft: #241a3f;
 
-    --partner: #a8d8fa;
-    --partner-ink: #bee3fb;
-    --partner-soft: #12283f;
+    --seat-b: #a8d8fa;
+    --seat-b-ink: #bee3fb;
+    --seat-b-soft: #12283f;
 
-    --partnerWork: #4d9bf0;
-    --partnerWork-ink: #7fbff5;
-    --partnerWork-soft: #102a45;
+    --seat-b-work: #4d9bf0;
+    --seat-b-work-ink: #7fbff5;
+    --seat-b-work-soft: #102a45;
 
     --alert-ink: #f2a3b4;
     --alert-soft: #38202a;
@@ -117,21 +122,21 @@
   --line: #2a3550;
   --line-soft: #212b42;
 
-  --mine: #c9b4fb;
-  --mine-ink: #d5c4fc;
-  --mine-soft: #241c3d;
+  --seat-a: #c9b4fb;
+  --seat-a-ink: #d5c4fc;
+  --seat-a-soft: #241c3d;
 
-  --mineWork: #9f6bff;
-  --mineWork-ink: #be9bff;
-  --mineWork-soft: #241a3f;
+  --seat-a-work: #9f6bff;
+  --seat-a-work-ink: #be9bff;
+  --seat-a-work-soft: #241a3f;
 
-  --partner: #a8d8fa;
-  --partner-ink: #bee3fb;
-  --partner-soft: #12283f;
+  --seat-b: #a8d8fa;
+  --seat-b-ink: #bee3fb;
+  --seat-b-soft: #12283f;
 
-  --partnerWork: #4d9bf0;
-  --partnerWork-ink: #7fbff5;
-  --partnerWork-soft: #102a45;
+  --seat-b-work: #4d9bf0;
+  --seat-b-work-ink: #7fbff5;
+  --seat-b-work-soft: #102a45;
 
   --alert-ink: #f2a3b4;
   --alert-soft: #38202a;
@@ -151,27 +156,66 @@
   --line: #d4e0f1;
   --line-soft: #e5edf8;
 
-  --mine: #b49bf5;
-  --mine-ink: #7b5ad6;
-  --mine-soft: #efe9fe;
+  --seat-a: #b49bf5;
+  --seat-a-ink: #7b5ad6;
+  --seat-a-soft: #efe9fe;
 
-  --mineWork: #7c3aed;
-  --mineWork-ink: #5b21b6;
-  --mineWork-soft: #e7dcfd;
+  --seat-a-work: #7c3aed;
+  --seat-a-work-ink: #5b21b6;
+  --seat-a-work-soft: #e7dcfd;
 
-  --partner: #7fc8f5;
-  --partner-ink: #17699f;
-  --partner-soft: #e0f1fd;
+  --seat-b: #7fc8f5;
+  --seat-b-ink: #17699f;
+  --seat-b-soft: #e0f1fd;
 
-  --partnerWork: #1d6fd4;
-  --partnerWork-ink: #114e96;
-  --partnerWork-soft: #dce9fa;
+  --seat-b-work: #1d6fd4;
+  --seat-b-work-ink: #114e96;
+  --seat-b-work-soft: #dce9fa;
 
   --alert-ink: #b03a54;
   --alert-soft: #fde8ed;
 
   --shadow: 0 1px 1px rgba(30, 42, 74, 0.04), 0 12px 32px -18px rgba(30, 42, 74, 0.24);
   --shadow-lift: 0 2px 4px rgba(30, 42, 74, 0.06), 0 18px 40px -22px rgba(30, 42, 74, 0.36);
+}
+
+/*
+ * 자리(mine/partner) 에 사람 색(seat-a/seat-b) 을 연결한다.
+ *
+ * 기본은 "내가 a" — 공간을 만든 사람의 화면이다.
+ * 나중에 들어온 사람(data-seat="b")은 연결만 뒤집는다. 그러면 자리는 그대로
+ * 내 칸이 왼쪽인데, 색은 두 화면에서 똑같이 유지된다.
+ */
+:root {
+  --mine: var(--seat-a);
+  --mine-ink: var(--seat-a-ink);
+  --mine-soft: var(--seat-a-soft);
+  --mineWork: var(--seat-a-work);
+  --mineWork-ink: var(--seat-a-work-ink);
+  --mineWork-soft: var(--seat-a-work-soft);
+
+  --partner: var(--seat-b);
+  --partner-ink: var(--seat-b-ink);
+  --partner-soft: var(--seat-b-soft);
+  --partnerWork: var(--seat-b-work);
+  --partnerWork-ink: var(--seat-b-work-ink);
+  --partnerWork-soft: var(--seat-b-work-soft);
+}
+
+:root[data-seat='b'] {
+  --mine: var(--seat-b);
+  --mine-ink: var(--seat-b-ink);
+  --mine-soft: var(--seat-b-soft);
+  --mineWork: var(--seat-b-work);
+  --mineWork-ink: var(--seat-b-work-ink);
+  --mineWork-soft: var(--seat-b-work-soft);
+
+  --partner: var(--seat-a);
+  --partner-ink: var(--seat-a-ink);
+  --partner-soft: var(--seat-a-soft);
+  --partnerWork: var(--seat-a-work);
+  --partnerWork-ink: var(--seat-a-work-ink);
+  --partnerWork-soft: var(--seat-a-work-soft);
 }
 
 /* 갈래별 색을 한 곳에서 꺼내 쓰기 위한 스코프 변수 */

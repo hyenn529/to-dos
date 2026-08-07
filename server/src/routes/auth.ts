@@ -3,6 +3,7 @@ import { db } from '../db.ts';
 import {
   clearSessionCookie,
   findPartner,
+  findSeat,
   findSpaceForUser,
   findUserById,
   generateInviteCode,
@@ -137,11 +138,17 @@ authRouter.get('/me', requireAuth, (req, res) => {
     user: req.user,
     space: req.space,
     partner: req.partner,
+    seat: req.seat,
   });
 });
 
 async function sessionPayload(userId: number) {
   const user = await findUserById(userId);
   const space = await findSpaceForUser(userId);
-  return { user, space, partner: space ? await findPartner(space.id, userId) : null };
+  return {
+    user,
+    space,
+    partner: space ? await findPartner(space.id, userId) : null,
+    seat: space ? await findSeat(space.id, userId) : 'a',
+  };
 }

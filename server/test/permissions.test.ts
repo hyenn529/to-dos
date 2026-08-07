@@ -114,6 +114,16 @@ describe('갈래와 권한', () => {
     assert.equal(toggled.body.todo.done, true);
   });
 
+  it('자리는 공간을 만든 사람이 a, 들어온 사람이 b 로 고정된다', async () => {
+    const { hyein, minwoo } = await signUpPair(base);
+
+    assert.equal((await hyein.request('GET', '/api/auth/me')).body.seat, 'a');
+    assert.equal((await minwoo.request('GET', '/api/auth/me')).body.seat, 'b');
+
+    // 색은 이 값에 붙으므로, 다시 물어봐도 흔들리면 안 된다.
+    assert.equal((await minwoo.request('GET', '/api/auth/me')).body.seat, 'b');
+  });
+
   it('"같이" 항목은 양쪽 모두 자기 칸에 놓인다', async () => {
     const { hyein, minwoo } = await signUpPair(base);
 
