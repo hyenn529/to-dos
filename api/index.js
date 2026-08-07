@@ -11,7 +11,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 var here = dirname(fileURLToPath(import.meta.url));
 function env(name) {
-  const value = process.env[name]?.trim().replace(/^['"]|['"]$/g, "");
+  const value = process.env[name]?.replace(/\s+/g, "").replace(/^['"]|['"]$/g, "");
   return value ? value : void 0;
 }
 var tursoUrl = env("TURSO_DATABASE_URL");
@@ -104,8 +104,14 @@ function splitStatements(sql) {
 }
 var backend = tursoUrl ? "turso" : "local";
 var ready = null;
+function redact(message) {
+  const token = env("TURSO_AUTH_TOKEN");
+  let out = message;
+  if (token) out = out.split(token).join("***");
+  return out.replace(/\beyJ[\w-]*[\s.][\w\s.-]{20,}/g, "***");
+}
 function configError(message) {
-  return Object.assign(new Error(message), { expose: true });
+  return Object.assign(new Error(redact(message)), { expose: true });
 }
 async function connect() {
   if (tursoUrl) {

@@ -33,12 +33,15 @@ export type Db = {
 const here = dirname(fileURLToPath(import.meta.url));
 
 /**
- * 배포 화면에 붙여넣은 값에는 앞뒤 공백, 줄바꿈, 감싸는 따옴표가 섞여 들어오기 쉽다.
- * 눈에는 안 보이는데 `new URL()` 은 그걸로 바로 실패한다 ("Invalid URL").
- * 사람이 못 찾을 실수이므로 코드가 다듬는다.
+ * 배포 화면에 붙여넣은 값에는 공백, 줄바꿈, 감싸는 따옴표가 섞여 들어오기 쉽다.
+ * 긴 토큰은 복사하다 중간에서 줄이 접히기도 한다. 눈에는 거의 안 보이는데
+ * `new URL()` 은 "Invalid URL" 로, HTTP 헤더는 "invalid header value" 로 바로 죽는다.
+ *
+ * 주소와 토큰은 원래 공백이 들어갈 수 없는 값이므로, 중간에 있는 공백까지 지운다.
+ * 사람이 눈으로 찾을 수 없는 실수라서 코드가 대신 다듬는다.
  */
 function env(name: string): string | undefined {
-  const value = process.env[name]?.trim().replace(/^['"]|['"]$/g, '');
+  const value = process.env[name]?.replace(/\s+/g, '').replace(/^['"]|['"]$/g, '');
   return value ? value : undefined;
 }
 
@@ -155,9 +158,21 @@ export const backend = tursoUrl ? 'turso' : 'local';
  */
 let ready: Promise<Db> | null = null;
 
+/**
+ * 오류 문구에 토큰이 딸려오는 일이 있다 (예: `Headers.set: "Bearer eyJ..." is invalid`).
+ * 그걸 그대로 화면에 띄우면 비밀이 브라우저와 로그로 새어 나간다.
+ */
+function redact(message: string): string {
+  const token = env('TURSO_AUTH_TOKEN');
+  let out = message;
+  if (token) out = out.split(token).join('***');
+  // 값이 조금 달라져도(공백이 낀 원본 등) 잡히도록 JWT 모양은 무조건 가린다.
+  return out.replace(/\beyJ[\w-]*[\s.][\w\s.-]{20,}/g, '***');
+}
+
 /** 화면에 그대로 보여줘도 되는(= 비밀이 없는) 설정 오류. */
 function configError(message: string): Error {
-  return Object.assign(new Error(message), { expose: true });
+  return Object.assign(new Error(redact(message)), { expose: true });
 }
 
 async function connect(): Promise<Db> {
