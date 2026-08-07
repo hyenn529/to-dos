@@ -580,6 +580,7 @@ import { Router as Router3 } from "express";
 function bucketFor(row, viewerId) {
   const isMine = row.owner_id === viewerId;
   if (row.lane === "work") return isMine ? "mineWork" : "partnerWork";
+  if (row.together === 1) return "mine";
   return isMine ? "mine" : "partner";
 }
 async function subtasksFor(todoIds) {
@@ -634,7 +635,8 @@ function toTodo(row, viewerId, subtasks) {
     // 고치고 지우는 건 언제나 주인만.
     canEdit: isOwner,
     // 상대 갈래는 내 "남은 개수"에 들어가지 않는다.
-    countable: isOwner
+    // 「같이」는 내 칸에 놓이는 만큼 내 몫으로도 센다.
+    countable: isOwner || together
   };
 }
 async function hydrate(rows, viewerId) {

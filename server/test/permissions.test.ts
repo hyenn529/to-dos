@@ -114,6 +114,45 @@ describe('갈래와 권한', () => {
     assert.equal(toggled.body.todo.done, true);
   });
 
+  it('"같이" 항목은 양쪽 모두 자기 칸에 놓인다', async () => {
+    const { hyein, minwoo } = await signUpPair(base);
+
+    await minwoo.request('POST', '/api/todos', {
+      title: '장보기',
+      lane: 'personal',
+      date: '2026-08-14',
+      together: true,
+    });
+    await minwoo.request('POST', '/api/todos', {
+      title: '민우 혼자 할 일',
+      lane: 'personal',
+      date: '2026-08-14',
+    });
+
+    const seen = await hyein.request('GET', '/api/todos?from=2026-08-14&to=2026-08-14');
+    const shared = seen.body.todos.find((t: { title: string }) => t.title === '장보기');
+    const alone = seen.body.todos.find((t: { title: string }) => t.title === '민우 혼자 할 일');
+
+    assert.equal(shared.bucket, 'mine', '같이 항목은 상대가 적었어도 내 칸에');
+    assert.equal(shared.countable, true, '내 칸에 있으니 내 남은 개수에도 센다');
+    assert.equal(alone.bucket, 'partner', '같이가 아니면 그대로 상대 칸에');
+
+    // 주인 화면에서도 자기 칸 그대로다.
+    const mine = await minwoo.request('GET', '/api/todos?from=2026-08-14&to=2026-08-14');
+    assert.equal(
+      mine.body.todos.find((t: { title: string }) => t.title === '장보기').bucket,
+      'mine',
+    );
+
+    // 달력 막대도 같은 기준으로 센다.
+    const load = await hyein.request(
+      'GET',
+      '/api/todos/load?from=2026-08-14&to=2026-08-14&today=2026-08-14',
+    );
+    assert.equal(load.body.days[0].mine, 1, '같이 항목이 내 막대에 들어간다');
+    assert.equal(load.body.days[0].partner, 1, '상대 혼자 할 일은 상대 막대에');
+  });
+
   it('lane 과 owner 는 서버가 정하므로 남의 칸에 끼워 넣을 수 없다', async () => {
     const { hyein, minwoo } = await signUpPair(base);
     const meMinwoo = await minwoo.request('GET', '/api/auth/me');

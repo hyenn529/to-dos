@@ -33,10 +33,16 @@ type SubtaskRow = {
  *
  * 두 축이 만나 네 칸이 된다 — 누구 것인가(나/상대) × 어떤 일인가(개인/업무).
  * 상대의 업무도 보이지만, 볼 수만 있고 체크하거나 고치지는 못한다.
+ *
+ * 「같이」 붙인 일만 예외다. 둘이 함께 하기로 한 일이므로 누가 적었든
+ * **양쪽 모두 자기 칸**에 놓인다. 상대 칸에 있으면 남의 일처럼 보이는데,
+ * 실제로는 내 일이기도 하기 때문이다. 업무는 원래 상대에게 보이지 않으므로
+ * 이 예외를 적용하지 않는다.
  */
 export function bucketFor(row: TodoRow, viewerId: number): Bucket {
   const isMine = row.owner_id === viewerId;
   if (row.lane === 'work') return isMine ? 'mineWork' : 'partnerWork';
+  if (row.together === 1) return 'mine';
   return isMine ? 'mine' : 'partner';
 }
 
@@ -96,7 +102,8 @@ function toTodo(row: TodoRow, viewerId: number, subtasks: Subtask[]): Todo {
     // 고치고 지우는 건 언제나 주인만.
     canEdit: isOwner,
     // 상대 갈래는 내 "남은 개수"에 들어가지 않는다.
-    countable: isOwner,
+    // 「같이」는 내 칸에 놓이는 만큼 내 몫으로도 센다.
+    countable: isOwner || together,
   };
 }
 
