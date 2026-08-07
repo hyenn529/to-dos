@@ -160,7 +160,11 @@ describe('갈래와 권한', () => {
       '/api/todos/load?from=2026-08-14&to=2026-08-14&today=2026-08-14',
     );
     assert.equal(load.body.days[0].mine, 1, '같이 항목이 내 막대에 들어간다');
-    assert.equal(load.body.days[0].partner, 1, '상대 혼자 할 일은 상대 막대에');
+    assert.equal(
+      load.body.days[0].partner,
+      2,
+      '같이 항목은 상대 막대에도 들어간다 (같이 1 + 상대 혼자 1)',
+    );
   });
 
   it('lane 과 owner 는 서버가 정하므로 남의 칸에 끼워 넣을 수 없다', async () => {

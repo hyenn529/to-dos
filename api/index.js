@@ -720,11 +720,17 @@ async function monthLoad(spaceId, viewerId, from, to) {
     }
     return entry;
   };
+  const alone = (await db.get(
+    "SELECT COUNT(*) AS n FROM memberships WHERE space_id = ?",
+    [spaceId]
+  )).n < 2;
   for (const row of rows) {
     const bucket = bucketFor(row, viewerId);
+    const mirrored = !alone && row.together === 1 && row.lane === "personal";
     for (const date of eachDate(row.date, row.end_date, from, to)) {
       const entry = touch(date);
       entry[bucket] += 1;
+      if (mirrored) entry.partner += 1;
       entry.total += 1;
       if (row.done === 1) entry.doneCount += 1;
     }

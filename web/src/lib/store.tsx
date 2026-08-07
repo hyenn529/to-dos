@@ -274,7 +274,16 @@ export function useStore() {
 /** 한 날짜의 할 일을 갈래별로 나눈다. 끝낸 것은 아래로. */
 export function groupByBucket(todos: Todo[]): Record<Bucket, Todo[]> {
   const out: Record<Bucket, Todo[]> = { mine: [], mineWork: [], partner: [], partnerWork: [] };
-  for (const todo of todos) out[todo.bucket].push(todo);
+  for (const todo of todos) {
+    out[todo.bucket].push(todo);
+
+    // 「같이」는 두 사람 모두의 일이다. 한 칸에만 두면 상대 칸이 비어서
+    // "저 사람은 이걸 안 하나" 처럼 보인다. 상대 칸에도 비쳐 보이게 둔다.
+    // 비친 쪽은 손대는 곳이 아니므로 점으로만 나온다 — 한 화면에 체크는 하나뿐이다.
+    if (todo.together && todo.bucket === 'mine') {
+      out.partner.push({ ...todo, bucket: 'partner', canCheck: false, canEdit: false });
+    }
+  }
   for (const list of Object.values(out)) {
     list.sort((a, b) => {
       if (a.done !== b.done) return a.done ? 1 : -1;

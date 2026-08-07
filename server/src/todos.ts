@@ -196,12 +196,22 @@ export async function monthLoad(
     return entry;
   };
 
+  // 「같이」는 두 사람 칸에 모두 뜨므로 막대도 둘이어야 한다.
+  // 혼자 쓰는 동안에는 상대 막대가 있을 자리가 없으니 그리지 않는다.
+  const alone = (await db.get<{ n: number }>(
+    'SELECT COUNT(*) AS n FROM memberships WHERE space_id = ?',
+    [spaceId],
+  ))!.n < 2;
+
   for (const row of rows) {
     const bucket = bucketFor(row, viewerId);
+    const mirrored = !alone && row.together === 1 && row.lane === 'personal';
 
     for (const date of eachDate(row.date!, row.end_date, from, to)) {
       const entry = touch(date);
       entry[bucket] += 1;
+      if (mirrored) entry.partner += 1;
+      // 개수는 항목 수다 — 막대가 둘이라고 할 일이 둘이 되는 건 아니다.
       entry.total += 1;
       if (row.done === 1) entry.doneCount += 1;
     }

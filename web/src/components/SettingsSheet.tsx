@@ -145,7 +145,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
           <h3>규칙</h3>
           <ul className="sheet__rules">
             <li>체크는 자기 것만. 상대 할 일은 점으로만 보입니다.</li>
-            <li>「같이」 붙은 일은 둘 다 자기 칸에 뜨고, 누가 체크해도 양쪽에서 끝납니다.</li>
+            <li>「같이」 붙은 일은 두 사람 칸에 모두 뜨고, 누가 체크해도 양쪽에서 끝납니다.</li>
             <li>상대 칸은 보기만 합니다 — 개인도 업무도, 체크하거나 고칠 수 없어요.</li>
             <li>재촉 알림은 없습니다.</li>
           </ul>
