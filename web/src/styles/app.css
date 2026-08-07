@@ -878,7 +878,7 @@ ul {
   cursor: pointer;
 }
 .row__pick input {
-  width: 108px;
+  width: auto;
   border: 0;
   background: none;
   font-size: 11.5px;

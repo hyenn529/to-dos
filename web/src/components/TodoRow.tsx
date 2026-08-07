@@ -173,6 +173,10 @@ export function TodoRow({ todo, compact = false }: { todo: Todo; compact?: boole
                 </button>
               </form>
 
+              {/*
+                한 줄에 다 넣으면 좁은 화면에서 제멋대로 접힌다.
+                자주 쓰는 세 개를 윗줄에 묶고, 폭을 먹는 날짜와 위험한 지우기를 아랫줄로 내린다.
+              */}
               <div className="row__actions">
                 <button
                   type="button"
@@ -187,6 +191,12 @@ export function TodoRow({ todo, compact = false }: { todo: Todo; compact?: boole
                 >
                   내일로
                 </button>
+                <button type="button" onClick={() => moveTo(null)} disabled={todo.date === null}>
+                  언젠가로
+                </button>
+              </div>
+
+              <div className="row__actions">
                 {/* 아무 날로나. 달력을 띄우는 건 기기가 하므로 폰에서도 그대로 된다. */}
                 <label className="row__pick">
                   날짜
@@ -200,9 +210,6 @@ export function TodoRow({ todo, compact = false }: { todo: Todo; compact?: boole
                     }}
                   />
                 </label>
-                <button type="button" onClick={() => moveTo(null)} disabled={todo.date === null}>
-                  언젠가로
-                </button>
                 <button
                   type="button"
                   className="is-danger"
